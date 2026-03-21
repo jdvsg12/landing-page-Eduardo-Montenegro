@@ -69,6 +69,22 @@ export const translations = {
             send: "Enviar",
             contactTitle: "Contacto",
             socialMedia: "Redes Sociales",
+            validation: {
+                nameMin: "El nombre debe tener al menos 2 caracteres",
+                nameMax: "El nombre no puede exceder 100 caracteres",
+                nameFormat: "El nombre solo puede contener letras y espacios",
+                emailRequired: "El correo electrónico es obligatorio",
+                emailInvalid: "Por favor ingresa un correo electrónico válido",
+                emailMax: "El correo es demasiado largo",
+                phoneRequired: "El teléfono es obligatorio",
+                phoneFormat: "El teléfono solo puede contener números, espacios, guiones y paréntesis",
+                phoneMin: "El teléfono debe tener al menos 7 dígitos",
+                phoneMax: "El teléfono no puede tener más de 15 dígitos",
+                servicesRequired: "Debes seleccionar un servicio",
+                messageMax: "El mensaje no puede exceder 1000 caracteres",
+                termsRequired: "Debes aceptar los términos y condiciones",
+                formTitle: "Por favor corrige los siguientes errores:"
+            }
         },
         faq: {
             title: "Preguntas frecuentes",
@@ -206,6 +222,22 @@ export const translations = {
             send: "Send it",
             contactTitle: "Contact",
             socialMedia: "Social Media",
+            validation: {
+                nameMin: "Name must be at least 2 characters",
+                nameMax: "Name cannot exceed 100 characters",
+                nameFormat: "Name can only contain letters and spaces",
+                emailRequired: "Email is required",
+                emailInvalid: "Please enter a valid email address",
+                emailMax: "Email is too long",
+                phoneRequired: "Phone number is required",
+                phoneFormat: "Phone can only contain numbers, spaces, hyphens and parentheses",
+                phoneMin: "Phone must have at least 7 digits",
+                phoneMax: "Phone cannot have more than 15 digits",
+                servicesRequired: "You must select a service",
+                messageMax: "Message cannot exceed 1000 characters",
+                termsRequired: "You must accept the terms and conditions",
+                formTitle: "Please correct the following errors:"
+            }
         },
         faq: {
             title: "Frequently Asked Questions",
@@ -353,6 +385,22 @@ export const translations = {
             send: "Envoyer",
             contactTitle: "Contact",
             socialMedia: "Réseaux Sociaux",
+            validation: {
+                nameMin: "Le nom doit contenir au moins 2 caractères",
+                nameMax: "Le nom ne peut pas dépasser 100 caractères",
+                nameFormat: "Le nom ne peut contenir que des lettres et des espaces",
+                emailRequired: "L'email est obligatoire",
+                emailInvalid: "Veuillez entrer une adresse email valide",
+                emailMax: "L'email est trop long",
+                phoneRequired: "Le numéro de téléphone est obligatoire",
+                phoneFormat: "Le téléphone ne peut contenir que des chiffres, espaces, tirets et parenthèses",
+                phoneMin: "Le téléphone doit avoir au moins 7 chiffres",
+                phoneMax: "Le téléphone ne peut pas avoir plus de 15 chiffres",
+                servicesRequired: "Vous devez sélectionner un service",
+                messageMax: "Le message ne peut pas dépasser 1000 caractères",
+                termsRequired: "Vous devez accepter les termes et conditions",
+                formTitle: "Veuillez corriger les erreurs suivantes:"
+            }
         },
         faq: {
             title: "Questions fréquentes",

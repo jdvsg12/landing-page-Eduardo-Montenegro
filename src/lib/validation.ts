@@ -1,37 +1,43 @@
 import { z } from 'zod'
+import { getTranslation } from './translations'
+import type { Language } from './translations'
 
-export const contactFormSchema = z.object({
-    name: z.string()
-        .min(2, 'El nombre debe tener al menos 2 caracteres')
-        .max(100, 'El nombre no puede exceder 100 caracteres')
-        .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, 'El nombre solo puede contener letras y espacios'),
-    
-    email: z.string()
-        .min(1, 'El correo electrónico es obligatorio')
-        .email('Por favor ingresa un correo electrónico válido')
-        .max(254, 'El correo es demasiado largo'),
-    
-    phone: z.string()
-        .min(1, 'El teléfono es obligatorio')
-        .regex(/^[\d\s\-\+\(\)]+$/, 'El teléfono solo puede contener números, espacios, guiones y paréntesis')
-        .refine((val) => val.replace(/\D/g, '').length >= 7, 'El teléfono debe tener al menos 7 dígitos')
-        .refine((val) => val.replace(/\D/g, '').length <= 15, 'El teléfono no puede tener más de 15 dígitos'),
-    
-    services: z.string()
-        .min(1, 'Debes seleccionar un servicio'),
-    
-    message: z.string()
-        .max(1000, 'El mensaje no puede exceder 1000 caracteres')
-        .optional()
-        .or(z.literal('')),
-    
-    terms: z.boolean()
-        .refine((val) => val === true, 'Debes aceptar los términos y condiciones'),
-    
-    language: z.enum(['es', 'en', 'fr']).default('es'),
-})
+export function createContactFormSchema(lang: Language) {
+    const t = getTranslation(lang).contact.validation
 
-export type ContactFormData = z.infer<typeof contactFormSchema>
+    return z.object({
+        name: z.string()
+            .min(2, t.nameMin)
+            .max(100, t.nameMax)
+            .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, t.nameFormat),
+
+        email: z.string()
+            .min(1, t.emailRequired)
+            .email(t.emailInvalid)
+            .max(254, t.emailMax),
+
+        phone: z.string()
+            .min(1, t.phoneRequired)
+            .regex(/^[\d\s\-\+\(\)]+$/, t.phoneFormat)
+            .refine((val) => val.replace(/\D/g, '').length >= 7, t.phoneMin)
+            .refine((val) => val.replace(/\D/g, '').length <= 15, t.phoneMax),
+
+        services: z.string()
+            .min(1, t.servicesRequired),
+
+        message: z.string()
+            .max(1000, t.messageMax)
+            .optional()
+            .or(z.literal('')),
+
+        terms: z.boolean()
+            .refine((val) => val === true, t.termsRequired),
+
+        language: z.enum(['es', 'en', 'fr']).default(lang),
+    })
+}
+
+export type ContactFormData = z.infer<ReturnType<typeof createContactFormSchema>>
 
 // Helper function to format validation errors
 export function formatZodErrors(error: z.ZodError): Record<string, string> {

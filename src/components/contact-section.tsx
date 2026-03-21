@@ -7,7 +7,7 @@ import { useLanguage } from "@/lib/language-context"
 import { getTranslation } from "@/lib/translations"
 import { AnimatedSelect } from "./ui/animated-select"
 import { socialLinks } from "@/lib/social-links"
-import { contactFormSchema, formatZodErrors } from "@/lib/validation"
+import { createContactFormSchema, formatZodErrors } from "@/lib/validation"
 
 export function ContactSection() {
     const sectionRef = useRef<HTMLDivElement>(null)
@@ -43,6 +43,7 @@ export function ContactSection() {
         }
 
         // Validación cliente-side con Zod
+        const contactFormSchema = createContactFormSchema(language)
         const validationResult = contactFormSchema.safeParse(data)
 
         if (!validationResult.success) {
@@ -113,7 +114,7 @@ export function ContactSection() {
                                         animate={{ opacity: 1, y: 0 }}
                                         className="rounded border border-red-500 bg-red-500/10 p-4 text-red-400"
                                     >
-                                        <p className="font-medium mb-2">Por favor corrige los siguientes errores:</p>
+                                        <p className="font-medium mb-2">{t.contact.validation.formTitle}</p>
                                         <ul className="list-disc list-inside text-sm space-y-1">
                                             {Object.entries(validationErrors).map(([field, message]) => (
                                                 <li key={field}>{message}</li>
