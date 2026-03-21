@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { render } from '@react-email/render'
 import ContactNotificationEmail from '@/emails/contact-notification'
-import { contactFormSchema, formatZodErrors } from '@/lib/validation'
+import { createContactFormSchema, formatZodErrors } from '@/lib/validation'
+import type { Language } from '@/lib/translations'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -11,6 +12,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json()
 
         // Validación con Zod
+        const contactFormSchema = createContactFormSchema((body.language as Language) || 'es')
         const result = contactFormSchema.safeParse(body)
 
         if (!result.success) {
