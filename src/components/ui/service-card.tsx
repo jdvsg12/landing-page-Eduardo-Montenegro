@@ -3,11 +3,6 @@
 import { useLayoutEffect, useRef, useState } from "react"
 import { motion } from "motion/react"
 
-interface ContactInfo {
-    whatsapp?: string
-    email?: string
-}
-
 interface ServiceCardProps {
     title: string
     description: string

@@ -48,7 +48,9 @@ export function ContactSection() {
             })
 
             if (!response.ok) {
-                throw new Error('Error al enviar el formulario')
+                const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }))
+                console.error('API Error:', errorData)
+                throw new Error(errorData.error || 'Error al enviar el formulario')
             }
 
             setSubmitStatus('success')
@@ -160,7 +162,7 @@ export function ContactSection() {
                                         animate={{ opacity: 1, y: 0 }}
                                         className="rounded border border-red-500 bg-red-500/10 p-4 text-red-400"
                                     >
-                                        Hubo un error al enviar el mensaje. Por favor, intenta de nuevo.
+                                        Hubo un error al enviar el mensaje. Por favor, intenta de nuevo. Verifica que hayas completado todos los campos y aceptado los términos.
                                     </motion.div>
                                 )}
 
