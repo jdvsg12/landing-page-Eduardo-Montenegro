@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react"
 import { motion, useScroll, useTransform } from "motion/react"
+import { z } from "zod"
 import { AnimatedInput } from "@/components/ui/animated-input"
 import { useLanguage } from "@/lib/language-context"
 import { getTranslation } from "@/lib/translations"
@@ -11,6 +12,7 @@ import { createContactFormSchema, formatZodErrors } from "@/lib/validation"
 
 export function ContactSection() {
     const sectionRef = useRef<HTMLDivElement>(null)
+    const termsRef = useRef<HTMLInputElement>(null)
     const { scrollYProgress } = useScroll({
         target: sectionRef,
         offset: ["start end", "end start"],
@@ -38,16 +40,18 @@ export function ContactSection() {
             phone: formData.get('phone') as string,
             services: formData.get('services') as string,
             message: formData.get('message') as string,
-            terms: formData.get('terms') === 'on',
+            terms: termsRef.current?.checked || false,
             language: language,
         }
 
-        // Validación cliente-side con Zod
+        // Validación cliente-side con Zod usando parse y try-catch
         const contactFormSchema = createContactFormSchema(language)
-        const validationResult = contactFormSchema.safeParse(data)
 
-        if (!validationResult.success) {
-            const errors = formatZodErrors(validationResult.error)
+        try {
+            contactFormSchema.parse(data)
+            // Si llega aquí, la validación pasó
+        } catch (validationError) {
+            const errors = formatZodErrors(validationError as z.ZodError)
             setValidationErrors(errors)
             setIsSubmitting(false)
             return
@@ -171,6 +175,7 @@ export function ContactSection() {
                                 {/* Terms and Conditions Checkbox */}
                                 <div className="flex items-start gap-3">
                                     <input
+                                        ref={termsRef}
                                         type="checkbox"
                                         id="terms"
                                         name="terms"

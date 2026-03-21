@@ -11,6 +11,8 @@ interface AnimatedInputProps {
     name: string
     isTextarea?: boolean
     error?: string
+    value?: string
+    onChange?: (value: string) => void
 }
 
 export function AnimatedInput({
@@ -21,9 +23,18 @@ export function AnimatedInput({
     name,
     isTextarea = false,
     error,
+    value,
+    onChange,
 }: AnimatedInputProps) {
     const [isFocused, setIsFocused] = useState(false)
-    const [hasValue, setHasValue] = useState(false)
+    const isControlled = value !== undefined
+    const hasValue = isControlled ? value.length > 0 : false
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        if (onChange) {
+            onChange(e.target.value)
+        }
+    }
 
     const inputClasses =
         "w-full bg-transparent border-0 border-b px-0 py-3 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-0 transition-colors duration-300" +
@@ -47,11 +58,10 @@ export function AnimatedInput({
                         name={name}
                         placeholder={placeholder}
                         rows={3}
+                        value={value}
+                        onChange={handleChange}
                         onFocus={() => setIsFocused(true)}
-                        onBlur={(e) => {
-                            setIsFocused(false)
-                            setHasValue(e.target.value.length > 0)
-                        }}
+                        onBlur={() => setIsFocused(false)}
                         className={inputClasses + " resize-none"}
                     />
                 ) : (
@@ -59,11 +69,10 @@ export function AnimatedInput({
                         type={type}
                         name={name}
                         placeholder={placeholder}
+                        value={value}
+                        onChange={handleChange}
                         onFocus={() => setIsFocused(true)}
-                        onBlur={(e) => {
-                            setIsFocused(false)
-                            setHasValue(e.target.value.length > 0)
-                        }}
+                        onBlur={() => setIsFocused(false)}
                         className={inputClasses}
                     />
                 )}
