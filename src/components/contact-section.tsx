@@ -7,6 +7,7 @@ import { useLanguage } from "@/lib/language-context"
 import { getTranslation } from "@/lib/translations"
 import { AnimatedSelect } from "./ui/animated-select"
 import { socialLinks } from "@/lib/social-links"
+import { contactFormSchema, formatZodErrors } from "@/lib/validation"
 
 export function ContactSection() {
     const sectionRef = useRef<HTMLDivElement>(null)
@@ -20,6 +21,7 @@ export function ContactSection() {
 
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
     const contentY = useTransform(scrollYProgress, [0, 0.5, 1], ["10%", "0%", "-10%"])
 
@@ -27,15 +29,27 @@ export function ContactSection() {
         e.preventDefault()
         setIsSubmitting(true)
         setSubmitStatus('idle')
+        setValidationErrors({})
 
         const formData = new FormData(e.currentTarget)
         const data = {
-            name: formData.get('name'),
-            email: formData.get('email'),
-            phone: formData.get('phone'),
-            services: formData.get('services'),
-            message: formData.get('message'),
+            name: formData.get('name') as string,
+            email: formData.get('email') as string,
+            phone: formData.get('phone') as string,
+            services: formData.get('services') as string,
+            message: formData.get('message') as string,
+            terms: formData.get('terms') === 'on',
             language: language,
+        }
+
+        // Validación cliente-side con Zod
+        const validationResult = contactFormSchema.safeParse(data)
+
+        if (!validationResult.success) {
+            const errors = formatZodErrors(validationResult.error)
+            setValidationErrors(errors)
+            setIsSubmitting(false)
+            return
         }
 
         try {
@@ -91,15 +105,36 @@ export function ContactSection() {
                                 {t.contact.title}
                             </motion.h2>
 
-                            <form className="space-y-8" onSubmit={handleSubmit}>
+                            <form className="space-y-8" onSubmit={handleSubmit} noValidate>
+                                {/* Mensajes de error de validación */}
+                                {Object.keys(validationErrors).length > 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="rounded border border-red-500 bg-red-500/10 p-4 text-red-400"
+                                    >
+                                        <p className="font-medium mb-2">Por favor corrige los siguientes errores:</p>
+                                        <ul className="list-disc list-inside text-sm space-y-1">
+                                            {Object.entries(validationErrors).map(([field, message]) => (
+                                                <li key={field}>{message}</li>
+                                            ))}
+                                        </ul>
+                                    </motion.div>
+                                )}
+
                                 <div className="grid gap-8 md:grid-cols-2">
-                                    <AnimatedInput label={t.contact.name} placeholder={t.contact.namePlaceholder} name="name" required />
+                                    <AnimatedInput
+                                        label={t.contact.name}
+                                        placeholder={t.contact.namePlaceholder}
+                                        name="name"
+                                        error={validationErrors.name}
+                                    />
                                     <AnimatedInput
                                         label={t.contact.email}
                                         placeholder={t.contact.emailPlaceholder}
                                         name="email"
                                         type="email"
-                                        required
+                                        error={validationErrors.email}
                                     />
                                 </div>
 
@@ -109,7 +144,7 @@ export function ContactSection() {
                                         placeholder="+57 300 123 4567"
                                         name="phone"
                                         type="tel"
-                                        required
+                                        error={validationErrors.phone}
                                     />
                                     <AnimatedSelect
                                         label={t.contact.servicesLabel}
@@ -120,7 +155,7 @@ export function ContactSection() {
                                             { value: 'Supervisión clínica profesionales', label: 'Supervisión clínica profesionales' },
                                             { value: 'Grupos de estudio', label: 'Grupos de estudio' },
                                         ]}
-                                        required
+                                        error={validationErrors.services}
                                     />
                                 </div>
 
@@ -129,6 +164,7 @@ export function ContactSection() {
                                     placeholder={t.contact.messagePlaceholder}
                                     name="message"
                                     isTextarea
+                                    error={validationErrors.message}
                                 />
 
                                 {/* Terms and Conditions Checkbox */}
@@ -137,13 +173,21 @@ export function ContactSection() {
                                         type="checkbox"
                                         id="terms"
                                         name="terms"
-                                        required
-                                        className="mt-1 h-4 w-4 rounded border-neutral-600 bg-neutral-800 text-green-500 focus:ring-green-500 focus:ring-offset-neutral-900"
+                                        className={`mt-1 h-4 w-4 rounded border-neutral-600 bg-neutral-800 text-green-500 focus:ring-green-500 focus:ring-offset-neutral-900 ${validationErrors.terms ? 'border-red-500 ring-2 ring-red-500' : ''}`}
                                     />
                                     <label htmlFor="terms" className="text-sm text-neutral-400">
                                         Acepto los <a href="/Politica_Proteccion_Datos_Colombia.pdf" target="_blank" className="text-green-400 hover:text-green-300 underline">términos y condiciones</a> y la política de privacidad
                                     </label>
                                 </div>
+                                {validationErrors.terms && (
+                                    <motion.p
+                                        initial={{ opacity: 0, y: -5 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="text-sm text-red-400 -mt-6"
+                                    >
+                                        {validationErrors.terms}
+                                    </motion.p>
+                                )}
 
                                 {/* Status Messages */}
                                 {submitStatus === 'success' && (

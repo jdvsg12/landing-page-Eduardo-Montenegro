@@ -2,21 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 import { render } from '@react-email/render'
 import ContactNotificationEmail from '@/emails/contact-notification'
+import { contactFormSchema, formatZodErrors } from '@/lib/validation'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
-        const { name, email, phone, services, message, language } = body
 
-        // Validación básica
-        if (!name || !email || !phone || !services) {
+        // Validación con Zod
+        const result = contactFormSchema.safeParse(body)
+
+        if (!result.success) {
+            const errors = formatZodErrors(result.error)
             return NextResponse.json(
-                { error: 'Faltan campos requeridos' },
+                {
+                    error: 'Error de validación',
+                    errors,
+                    message: Object.values(errors)[0] // Primer mensaje de error
+                },
                 { status: 400 }
             )
         }
+
+        const { name, email, phone, services, message, language } = result.data
 
         // Formatear teléfono para WhatsApp (eliminar espacios, guiones, etc.)
         const cleanPhone = phone.replace(/\D/g, '')
@@ -29,7 +38,7 @@ export async function POST(request: NextRequest) {
                 email,
                 phone: whatsappPhone,
                 services,
-                message,
+                message: message || '',
                 language,
                 contactId: Date.now().toString(),
             }))
@@ -43,7 +52,7 @@ export async function POST(request: NextRequest) {
         } catch (emailError) {
             console.error('Error enviando email:', emailError)
             return NextResponse.json(
-                { error: 'Error al enviar el email' },
+                { error: 'Error al enviar el email. Por favor intenta de nuevo.' },
                 { status: 500 }
             )
         }
