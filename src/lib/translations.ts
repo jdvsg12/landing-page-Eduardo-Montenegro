@@ -35,26 +35,22 @@ export const translations = {
                     title: "Psicoanálisis con adultos",
                     description:
                         "El psicoanálisis con adultos es un dispositivo clínico orientado al trabajo con el sufrimiento subjetivo, la angustia y los conflictos que se expresan de distintas maneras en la vida del sujeto.\n\nSe trata de un espacio de palabra y de escucha, en el que cada proceso se construye de manera singular y a su propio tiempo, a partir de lo que el sujeto trae como malestar, sufrimiento o interrogante.\n\nLas sesiones pueden realizarse de manera presencial u online, según el encuadre acordado.",
-                    contact: {
-                        whatsapp: "+573142793431",
-                        email: "psicoanalisis@eduardomontenegro.com"
-                    }
+                    whatsapp: "+573142793431",
+                    message: "Hola, estoy buscando iniciar psicoanalisis"
                 },
                 {
                     title: "Supervisión clínica",
                     description:
                         "La supervisión clínica es un espacio de trabajo dirigido a psicólogos/as y psicoanalistas que se encuentran ejerciendo la práctica clínica y desean interrogar su quehacer, sus impasses y sus decisiones.\n\nConsiste en un dispositivo de lectura clínica que permite situar la posición del analista, el lugar de la transferencia y los efectos de la intervención.\n\nLa supervisión se orienta por el caso, por lo singular de cada encuentro clínico y por las preguntas que allí emergen. \n\nModalidad online o presencial, según encuadre.",
-                    contact: {
-                        email: "formacion@eduardomontenegro.com"
-                    }
+                    whatsapp: "+573142793431",
+                    message: "Hola, quisiera supervisar un caso clínico"
                 },
                 {
                     title: "Grupo de estudio",
                     description:
                         "El grupo de estudio propone un espacio de lectura y discusión clínica en torno al primer encuentro del sujeto con el analista, desde una orientación lacaniana.\n\nSe trabajarán los modos de llegada a la consulta, la formulación de la demanda, la instalación del dispositivo analítico y los primeros efectos de la transferencia.\n\nEl trabajo se realizará a partir de los textos de Sigmund Freud, los seminarios de Jacques Lacan, y de la discusión clínica. Está dirigido a estudiantes avanzados y profesionales interesados en interrogar la clínica en su punto de inicio. \n\nModalidad online, frecuencia quincenal, miércoles de 9 a 11 a.m. (hora Colombia).",
-                    contact: {
-                        email: "formacion@eduardomontenegro.com"
-                    }
+                    whatsapp: "+573142793431",
+                    message: "Hola, quiero más información sobre el grupo de estudio"
                 }
             ],
         },
@@ -323,26 +319,22 @@ export const translations = {
                     title: "Psychanalyse avec des adultes",
                     description:
                         "La psychanalyse avec des adultes est un dispositif clinique orienté vers le travail de la souffrance subjective, de l'angoisse et des conflits qui s'expriment de différentes manières dans la vie du sujet.\n\nIl s'agit d'un espace de parole et d'écoute, dans lequel chaque processus se construit de manière singulière et à son propre rythme, à partir de ce que le sujet apporte comme malaise, souffrance ou question.\n\nLes séances peuvent se dérouler en présentiel ou en ligne, selon le cadre convenu.",
-                    contact: {
-                        whatsapp: "+573142793431",
-                        email: "psicoanalisis@eduardomontenegro.com"
-                    }
+                    whatsapp: "+573142793431",
+                    message: "Hola, estoy buscando iniciar psicoanalisis"
                 },
                 {
                     title: "Supervision clinique",
                     description:
                         "La supervision clinique est un espace de travail destiné aux psychologues et aux psychanalystes engagés dans la pratique clinique et souhaitant interroger leur travail, leurs impasses et leurs décisions.\n\nElle consiste en un dispositif de lecture clinique permettant de situer la position de l'analyste, la place du transfert et les effets de l'intervention.\n\nLa supervision s'oriente à partir du cas, de la singularité de chaque rencontre clinique et des questions qui y émergent. Modalité en ligne ou en présentiel, selon le cadre établi.",
-                    contact: {
-                        email: "formacion@eduardomontenegro.com"
-                    }
+                    whatsapp: "+573142793431",
+                    message: "Hola, quisiera supervisar un caso clínico"
                 },
                 {
                     title: "Groupe d'étude",
                     description:
                         "Le groupe d'étude propose un espace de lecture et de discussion clinique autour de la première rencontre du sujet avec l'analyste, dans une orientation lacanienne.\n\nSeront travaillés les modes d'entrée en consultation, la formulation de la demande, l'installation du dispositif analytique et les premiers effets du transfert.\n\nLe travail s'appuie sur des textes de Sigmund Freud, les séminaires de Jacques Lacan et la discussion clinique. Le groupe s'adresse aux étudiants avancés et aux professionnels souhaitant interroger la clinique à son point d'entrée. Modalité en ligne, fréquence bimensuelle, le mercredi de 9h à 11h (heure Colombie).",
-                    contact: {
-                        email: "formacion@eduardomontenegro.com"
-                    }
+                    whatsapp: "+573142793431",
+                    message: "Hola, quiero más información sobre el grupo de estudio"
                 }
             ],
         },

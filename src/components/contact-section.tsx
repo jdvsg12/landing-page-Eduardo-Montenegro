@@ -129,6 +129,20 @@ export function ContactSection() {
                                     isTextarea
                                 />
 
+                                {/* Terms and Conditions Checkbox */}
+                                <div className="flex items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        id="terms"
+                                        name="terms"
+                                        required
+                                        className="mt-1 h-4 w-4 rounded border-neutral-600 bg-neutral-800 text-green-500 focus:ring-green-500 focus:ring-offset-neutral-900"
+                                    />
+                                    <label htmlFor="terms" className="text-sm text-neutral-400">
+                                        Acepto los <a href="/Politica_Proteccion_Datos_Colombia.pdf" target="_blank" className="text-green-400 hover:text-green-300 underline">términos y condiciones</a> y la política de privacidad
+                                    </label>
+                                </div>
+
                                 {/* Status Messages */}
                                 {submitStatus === 'success' && (
                                     <motion.div
@@ -172,9 +186,10 @@ export function ContactSection() {
                             >
                                 <h3 className="mb-6 text-2xl font-semibold text-white">{t.contact.contactTitle}</h3>
                                 <div className="mb-8 space-y-2">
-                                    <p className="text-neutral-400">psicoanalisis@eduardomontenegro.com</p>
-                                    <p className="text-neutral-400">formacion@eduardomontenegro.com</p>
+                                    {/* <p className="text-neutral-400">psicoanalisis@eduardomontenegro.com</p>
+                                    <p className="text-neutral-400">formacion@eduardomontenegro.com</p> */}
                                     <p className="text-neutral-400">+57 3142793431</p>
+                                    <p className="text-neutral-400">WhatsApp: +57 3142793431</p>
                                 </div>
 
                                 <h3 className="mb-6 text-2xl font-semibold text-white">{t.contact.socialMedia}</h3>

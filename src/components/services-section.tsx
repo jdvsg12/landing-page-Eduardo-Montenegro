@@ -9,10 +9,8 @@ import { getTranslation } from "@/lib/translations"
 interface ServiceItem {
     title: string
     description: string
-    contact?: {
-        whatsapp?: string
-        email?: string
-    }
+    whatsapp?: string
+    message?: string
 }
 
 interface ServicesTranslations {
@@ -62,7 +60,8 @@ export function ServicesSection() {
                                 title={service.title}
                                 description={service.description}
                                 index={index}
-                                contact={service.contact}
+                                whatsapp={service.whatsapp}
+                                message={service.message}
                             />
                         ))}
                     </div>
