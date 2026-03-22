@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
                 {
                     error: 'Error de validación',
                     errors,
-                    message: Object.values(errors)[0] // Primer mensaje de error
+                    message: Object.values(errors)[0]
                 },
                 { status: 400 }
             )
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
             await resend.emails.send({
                 from: process.env.RESEND_FROM_EMAIL!,
-                to: 'e.montenegroflorez@gmail.com',
+                to: process.env.RESEND_TO_EMAIL!,
                 subject: `Nueva consulta de ${name}`,
                 html: emailHtml,
             })
