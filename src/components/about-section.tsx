@@ -12,7 +12,6 @@ export function AboutSection() {
         <section id="about" className="relative z-10 bg-background py-24 lg:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-24 lg:pb-14">
                 <div className="grid items-start gap-8 lg:grid-cols-[2fr_1fr] lg:gap-12">
-                    {/* Text Content - Left Side with internal scroll */}
                     <motion.div
                         initial={{ opacity: 0, x: -60 }}
                         whileInView={{ opacity: 1, x: 0 }}
@@ -20,14 +19,12 @@ export function AboutSection() {
                         transition={{ duration: 0.8, delay: 0.2 }}
                         className="thin-scrollbar order-2 max-h-[60vh] overflow-y-auto pr-4 lg:order-1"
                     >
-                        {/* Sobre mí */}
                         <div className="mb-12">
                             <p className="text-lg leading-relaxed text-muted-foreground whitespace-pre-line">
                                 {t.about.description}
                             </p>
                         </div>
 
-                        {/* Perfil */}
                         <div>
                             <h3 className="mb-4 text-xl font-semibold text-foreground whitespace-nowrap">
                                 {t.profile.title}
@@ -38,7 +35,6 @@ export function AboutSection() {
                         </div>
                     </motion.div>
 
-                    {/* Large Typography - Right Side */}
                     <motion.div
                         initial={{ opacity: 0, y: 60 }}
                         whileInView={{ opacity: 1, y: 0 }}

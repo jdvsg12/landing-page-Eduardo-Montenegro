@@ -44,12 +44,10 @@ export function ContactSection() {
             language: language,
         }
 
-        // Validación cliente-side con Zod usando parse y try-catch
         const contactFormSchema = createContactFormSchema(language)
 
         try {
             contactFormSchema.parse(data)
-            // Si llega aquí, la validación pasó
         } catch (validationError) {
             const errors = formatZodErrors(validationError as z.ZodError)
             setValidationErrors(errors)
@@ -78,7 +76,6 @@ export function ContactSection() {
                 form.reset()
             }
 
-            // Resetear el estado después de 5 segundos
             setTimeout(() => {
                 setSubmitStatus('idle')
             }, 5000)
@@ -99,7 +96,6 @@ export function ContactSection() {
             <div className="sticky top-0 flex min-h-screen items-center overflow-hidden py-24 lg:py-32">
                 <motion.div style={{ y: contentY }} className="mx-auto w-full max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-16 lg:grid-cols-2">
-                        {/* Left side - Form */}
                         <div>
                             <motion.h2
                                 initial={{ opacity: 0, y: 20 }}
@@ -111,7 +107,6 @@ export function ContactSection() {
                             </motion.h2>
 
                             <form className="space-y-8" onSubmit={handleSubmit} noValidate>
-                                {/* Mensajes de error de validación */}
                                 {Object.keys(validationErrors).length > 0 && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
@@ -172,7 +167,6 @@ export function ContactSection() {
                                     error={validationErrors.message}
                                 />
 
-                                {/* Terms and Conditions Checkbox */}
                                 <div className="flex items-start gap-3">
                                     <input
                                         ref={termsRef}
@@ -195,7 +189,6 @@ export function ContactSection() {
                                     </motion.p>
                                 )}
 
-                                {/* Status Messages */}
                                 {submitStatus === 'success' && (
                                     <motion.div
                                         initial={{ opacity: 0, y: -10 }}
@@ -228,7 +221,6 @@ export function ContactSection() {
                             </form>
                         </div>
 
-                        {/* Right side - Contact Info */}
                         <div className="lg:pl-12">
                             <motion.div
                                 initial={{ opacity: 0, x: 20 }}
@@ -238,8 +230,6 @@ export function ContactSection() {
                             >
                                 <h3 className="mb-6 text-2xl font-semibold text-white">{t.contact.contactTitle}</h3>
                                 <div className="mb-8 space-y-2">
-                                    {/* <p className="text-neutral-400">psicoanalisis@eduardomontenegro.com</p>
-                                    <p className="text-neutral-400">formacion@eduardomontenegro.com</p> */}
                                     <p className="text-neutral-400">+57 3142793431</p>
                                     <p className="text-neutral-400">WhatsApp: +57 3142793431</p>
                                 </div>

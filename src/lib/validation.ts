@@ -39,7 +39,6 @@ export function createContactFormSchema(lang: Language) {
 
 export type ContactFormData = z.infer<ReturnType<typeof createContactFormSchema>>
 
-// Helper function to format validation errors
 export function formatZodErrors(error: z.ZodError): Record<string, string> {
     const errors: Record<string, string> = {}
     error.errors.forEach((err) => {

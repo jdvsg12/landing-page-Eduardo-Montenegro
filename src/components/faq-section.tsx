@@ -30,7 +30,6 @@ interface Translations {
     faq: FaqTranslations
 }
 
-// Animated text component that reveals words with stagger effect
 function AnimatedTitle({ text, className }: { text: string; className?: string }) {
     const ref = useRef(null)
     const isInView = useInView(ref, { once: true, amount: 0.5 })
@@ -79,7 +78,6 @@ function AnimatedTitle({ text, className }: { text: string; className?: string }
     )
 }
 
-// Category tab button
 function CategoryTab({
     name,
     isActive,
@@ -122,7 +120,6 @@ function CategoryTab({
     )
 }
 
-// Animated FAQ item
 function FaqItem({
     question,
     answer,
@@ -170,13 +167,11 @@ export function FaqSection() {
     return (
         <section id="faq" className="relative z-10 bg-white py-24 lg:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                {/* Title with word-by-word reveal animation */}
                 <AnimatedTitle
                     text={faqContent.title}
                     className="mb-16 font-serif text-4xl italic text-foreground lg:mb-20 lg:text-6xl"
                 />
 
-                {/* Category Tabs */}
                 <div className="mb-12 flex flex-wrap justify-between gap-2 border-b border-muted-foreground/20">
                     {faqContent.categories.map((category, index) => (
                         <CategoryTab
@@ -189,7 +184,6 @@ export function FaqSection() {
                     ))}
                 </div>
 
-                {/* FAQ Items */}
                 <AnimatePresence mode="wait">
                     <motion.div
                         key={activeCategory}

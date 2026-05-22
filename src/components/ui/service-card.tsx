@@ -23,7 +23,6 @@ export function ServiceCard({ title, description, index, whatsapp, message }: Se
         const compute = () => {
             if (!descriptionRef.current) return
             const node = descriptionRef.current
-            // Force a reflow to get accurate measurements
             const originalClamp = (node.style as any).webkitLineClamp
                 ; (node.style as any).webkitLineClamp = '6'
             const isClamped = node.scrollHeight > node.clientHeight

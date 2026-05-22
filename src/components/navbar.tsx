@@ -55,7 +55,6 @@ export function Navbar() {
             setIsScrolled(scrollY > SCROLL_THRESHOLD)
             setIsInHero(scrollY < heroHeight - HERO_OFFSET)
 
-            // Detect services section using scroll position
             const servicesSection = document.getElementById("services")
             if (servicesSection) {
                 const servicesTop = servicesSection.offsetTop
@@ -310,7 +309,6 @@ const MobileMenuButton = React.forwardRef<HTMLButtonElement, MobileMenuButtonPro
 
 MobileMenuButton.displayName = "MobileMenuButton"
 
-// Importar React para el forwardRef
 import React from "react"
 
 interface MobileMenuProps {

@@ -40,11 +40,11 @@ export const metadata: Metadata = {
     icons: {
         icon: [
             {
-                url: "/icon-black.png",
+                url: "/favicon.ico",
                 media: "(prefers-color-scheme: light)",
             },
             {
-                url: "/icon-white.png",
+                url: "/icon-dark.png",
                 media: "(prefers-color-scheme: dark)",
             },
         ],

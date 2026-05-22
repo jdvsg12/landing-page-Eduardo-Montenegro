@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json()
 
-        // Validación con Zod
         const contactFormSchema = createContactFormSchema((body.language as Language) || 'es')
         const result = contactFormSchema.safeParse(body)
 
@@ -29,11 +28,9 @@ export async function POST(request: NextRequest) {
 
         const { name, email, phone, services, message, language } = result.data
 
-        // Formatear teléfono para WhatsApp (eliminar espacios, guiones, etc.)
         const cleanPhone = phone.replace(/\D/g, '')
         const whatsappPhone = cleanPhone.startsWith('57') ? cleanPhone : `57${cleanPhone}`
 
-        // Enviar email de notificación
         try {
             const emailHtml = await render(ContactNotificationEmail({
                 name,

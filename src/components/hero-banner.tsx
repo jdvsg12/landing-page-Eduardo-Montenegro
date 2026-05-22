@@ -11,7 +11,6 @@ export function HeroBanner() {
 
     return (
         <section className="sticky top-0 z-0 h-screen overflow-hidden bg-[#8F958B]">
-            {/* Mobile background image with filter */}
             <div className="absolute inset-0 lg:hidden">
                 <div
                     className="absolute inset-0 bg-cover bg-center bg-no-repeat"
