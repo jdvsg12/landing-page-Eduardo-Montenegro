@@ -1,12 +1,12 @@
 # Landing Page - Eduardo Montenegro
 
-![Project Presentation](/images/EM-presentation.png)
+![Project Presentation](./public/images/EM-presentation.png)
 
 ## 📋 Project Description
 
 Professional landing page for **Eduardo Montenegro**, Clinical Psychologist, designed with a modern and elegant approach. The website presents information about psychoanalysis services, clinical supervision, and study groups, with a fluid and attractive user experience.
 
-![Hero Section](/images/EM-1.png)
+![Hero Section](./public/images/EM-1.png)
 
 ## ✨ Key Features
 
@@ -33,7 +33,7 @@ Professional landing page for **Eduardo Montenegro**, Clinical Psychologist, des
 5. **FAQ Section**: Frequently asked questions with interactive accordion
 6. **Contact Section**: Functional contact form with validation
 
-![Services Section](/images/EM-2.png)
+![Services Section](./public/images/EM-2.png)
 
 ### 🔧 Technical Features
 
