@@ -32,7 +32,6 @@ const ContactNotificationEmail = ({
                 padding: '32px 16px'
             }}>
                 <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-                    {/* Header */}
                     <div style={{ marginBottom: '32px' }}>
                         <h1 style={{
                             fontSize: '28px',
@@ -44,7 +43,6 @@ const ContactNotificationEmail = ({
                         </h1>
                     </div>
 
-                    {/* Main Card */}
                     <div style={{
                         backgroundColor: 'rgba(0, 0, 0, 0.3)',
                         padding: '32px',
@@ -99,7 +97,6 @@ const ContactNotificationEmail = ({
                         )}
                     </div>
 
-                    {/* Action Buttons */}
                     <div style={{ display: 'flex', gap: '12px', marginBottom: '32px' }}>
                         <a
                             href={replyEmailLink}
@@ -137,7 +134,6 @@ const ContactNotificationEmail = ({
                         )}
                     </div>
 
-                    {/* Footer */}
                     <div style={{ fontSize: '12px', color: '#71717a', textAlign: 'center' }}>
                         <div>ID: {contactId}</div>
                         <div style={{ marginTop: '4px' }}>

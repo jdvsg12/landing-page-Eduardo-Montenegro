@@ -59,7 +59,6 @@ export function AnimatedSelect({ label, name, options, required = false, error }
                     ))}
                 </select>
 
-                {/* Error message */}
                 {error && (
                     <motion.p
                         initial={{ opacity: 0, y: -5 }}
@@ -70,7 +69,6 @@ export function AnimatedSelect({ label, name, options, required = false, error }
                     </motion.p>
                 )}
 
-                {/* Icono de flecha personalizado */}
                 <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2">
                     <svg
                         className="h-5 w-5 text-neutral-400"
@@ -85,7 +83,6 @@ export function AnimatedSelect({ label, name, options, required = false, error }
                     </svg>
                 </div>
 
-                {/* Animated underline */}
                 <motion.div
                     className={`absolute bottom-0 left-0 h-[2px] ${error ? 'bg-red-500' : 'bg-white'}`}
                     initial={{ width: "0%" }}

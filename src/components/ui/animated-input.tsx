@@ -77,7 +77,6 @@ export function AnimatedInput({
                     />
                 )}
 
-                {/* Error message */}
                 {error && (
                     <motion.p
                         initial={{ opacity: 0, y: -5 }}
@@ -88,7 +87,6 @@ export function AnimatedInput({
                     </motion.p>
                 )}
 
-                {/* Animated underline */}
                 <motion.div
                     className={`absolute bottom-0 left-0 h-[2px] ${error ? 'bg-red-500' : 'bg-white'}`}
                     initial={{ width: "0%" }}

@@ -40,7 +40,6 @@ export function ServicesSection() {
             id="services"
             className="relative z-20 min-h-[150vh] bg-[#D9D9D9] shadow-[0_-20px_60px_rgba(0,0,0,0.15)]"
         >
-            {/* Sticky container for content */}
             <div className="sticky top-0 flex min-h-screen items-center overflow-hidden py-20">
                 <motion.div style={{ y: contentY }} className="mx-auto w-full max-w-7xl px-6 lg:px-8">
                     <motion.h2
