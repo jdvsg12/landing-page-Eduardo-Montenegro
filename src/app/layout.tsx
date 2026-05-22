@@ -11,8 +11,6 @@ export const metadata: Metadata = {
     title: "Eduardo Montenegro Flórez | Psicólogo y Psicoanalista",
     description:
         "Especialista en Psicopatología y Salud Mental. Acompañamiento en malestar persistente, duelos y experiencias que dejan huella. Ningún sufrimiento es insignificante.",
-    generator: "v0.app",
-
     openGraph: {
         title: "Eduardo Montenegro Flórez | Psicólogo y Psicoanalista",
         description: "Ningún sufrimiento es insignificante. Atención clínica para adultos, presencial y online.",
