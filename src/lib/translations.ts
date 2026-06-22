@@ -188,23 +188,32 @@ export const translations = {
                 "I am currently a university professor and Director of Social Outreach at UNICOC (Colombia), spaces from which I continue to question clinical practice, suffering, and contemporary discourses on mental health.\n\nI have developed my clinical work both in person and online, working with people in different countries across the Americas and Europe. In parallel, I have actively participated in academic and research spaces: I served as Secretary of the Research Department at IUSAM–APdeBA until 2021, was a member of the editorial board of the Revista Argentina de Humanidades y Ciencias Sociales and participated as a reviewer in publications on research methodology in Argentina.\n\nI conceive the analytic space as a place of rigorous and respectful listening, where it is possible to speak without demands or promises of immediate well-being, and where each process unfolds in its own time.\n\nI listen.",
         },
         services: {
-            title: "I can help you with ...",
+            title: "Services",
+            seeMore: "See more",
+            seeLess: "See less",
+            contactWhatsApp: "Contact me on WhatsApp",
             items: [
                 {
-                    title: "Online Psychotherapy",
+                    title: "Psychoanalysis with Adults",
                     description:
-                        "Taking a different path from the one that led you to your current situation is possible. From Psychoanalysis, a listening space is offered where you can speak, accompanying you in the process of going through and transforming what causes you suffering.",
+                        "Psychoanalysis with adults is a clinical practice oriented toward working with subjective suffering, anxiety, and conflicts that manifest in different ways in the subject's life.\n\nIt is a space of speech and listening, where each process is built in a singular way and at its own pace, based on what the person brings as discomfort, suffering, or questioning.\n\nSessions can be held in person or online, according to the agreed framework.",
+                    whatsapp: "+573142793431",
+                    message: "Hello, I am interested in starting psychoanalysis"
                 },
                 {
-                    title: "Clinical Supervision - professionals",
+                    title: "Clinical Supervision",
                     description:
-                        "Taking a different path from the one that led you to your current situation is possible. From Psychoanalysis, a listening space is offered where you can speak, accompanying you in the process of going through and transforming what causes you suffering.",
+                        "Clinical supervision is a working space for psychologists and psychoanalysts who are engaged in clinical practice and wish to examine their work, their impasses, and their decisions.\n\nIt consists of a clinical reading device that allows one to situate the analyst's position, the place of transference, and the effects of intervention.\n\nSupervision is oriented by the case, by the singularity of each clinical encounter, and by the questions that emerge there. Online or in-person modality, according to the agreed framework.",
+                    whatsapp: "+573142793431",
+                    message: "Hello, I would like to supervise a clinical case"
                 },
                 {
-                    title: "Clinical Supervision - professionals",
+                    title: "Study Group",
                     description:
-                        "Taking a different path from the one that led you to your current situation is possible. From Psychoanalysis, a listening space is offered where you can speak, accompanying you in the process of going through and transforming what causes you suffering.",
-                },
+                        "The study group offers a space for reading and clinical discussion centered on the subject's first encounter with the analyst, from a Lacanian orientation.\n\nWe will work on the ways of arriving at consultation, the formulation of the demand, the installation of the analytic device, and the first effects of transference.\n\nThe work will be based on texts by Sigmund Freud, the seminars of Jacques Lacan, and clinical discussion. It is aimed at advanced students and professionals interested in questioning the clinic at its starting point.\n\nOnline modality, biweekly frequency, Wednesdays from 9 to 11 a.m. (Colombia time).",
+                    whatsapp: "+573142793431",
+                    message: "Hello, I want more information about the study group"
+                }
             ],
         },
         contact: {
