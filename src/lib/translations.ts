@@ -26,6 +26,9 @@ export const translations = {
         },
         services: {
             title: "Servicios",
+            indexLabel: "Prácticas",
+            intro: "Cada práctica tiene su propio tiempo, encuadre y espacio de trabajo.",
+            explore: "Explorar servicio",
             seeMore: "Ver más",
             seeLess: "Ver menos",
             contactWhatsApp: "Contactar por WhatsApp",
@@ -33,6 +36,9 @@ export const translations = {
             items: [
                 {
                     title: "Psicoanálisis con adultos",
+                    subtitle: "Un espacio de palabra para escuchar aquello que insiste y encontrar una forma singular de elaborarlo.",
+                    slug: "psicoanalisis-con-adultos",
+                    image: "/images/services/psychoanalysis-adults.png",
                     description:
                         "El psicoanálisis con adultos es un dispositivo clínico orientado al trabajo con el sufrimiento subjetivo, la angustia y los conflictos que se expresan de distintas maneras en la vida del sujeto.\n\nSe trata de un espacio de palabra y de escucha, en el que cada proceso se construye de manera singular y a su propio tiempo, a partir de lo que el sujeto trae como malestar, sufrimiento o interrogante.\n\nLas sesiones pueden realizarse de manera presencial u online, según el encuadre acordado.",
                     whatsapp: "+573142793431",
@@ -40,6 +46,9 @@ export const translations = {
                 },
                 {
                     title: "Supervisión clínica",
+                    subtitle: "Lectura rigurosa del caso, la transferencia y la posición del analista en su práctica.",
+                    slug: "supervision-clinica",
+                    image: "/images/services/clinical-supervision.png",
                     description:
                         "La supervisión clínica es un espacio de trabajo dirigido a psicólogos/as y psicoanalistas que se encuentran ejerciendo la práctica clínica y desean interrogar su quehacer, sus impasses y sus decisiones.\n\nConsiste en un dispositivo de lectura clínica que permite situar la posición del analista, el lugar de la transferencia y los efectos de la intervención.\n\nLa supervisión se orienta por el caso, por lo singular de cada encuentro clínico y por las preguntas que allí emergen. \n\nModalidad online o presencial, según encuadre.",
                     whatsapp: "+573142793431",
@@ -47,6 +56,9 @@ export const translations = {
                 },
                 {
                     title: "Grupo de estudio",
+                    subtitle: "Lectura y discusión clínica para interrogar el momento en que comienza un análisis.",
+                    slug: "grupo-de-estudio",
+                    image: "/images/services/study-group.png",
                     description:
                         "El grupo de estudio propone un espacio de lectura y discusión clínica en torno al primer encuentro del sujeto con el analista, desde una orientación lacaniana.\n\nSe trabajarán los modos de llegada a la consulta, la formulación de la demanda, la instalación del dispositivo analítico y los primeros efectos de la transferencia.\n\nEl trabajo se realizará a partir de los textos de Sigmund Freud, los seminarios de Jacques Lacan, y de la discusión clínica. Está dirigido a estudiantes avanzados y profesionales interesados en interrogar la clínica en su punto de inicio. \n\nModalidad online, frecuencia quincenal, miércoles de 9 a 11 a.m. (hora Colombia).",
                     whatsapp: "+573142793431",
@@ -195,6 +207,9 @@ export const translations = {
             items: [
                 {
                     title: "Psychoanalysis with Adults",
+                    subtitle: "A space of speech and listening for what insists, built around each person’s singular process.",
+                    slug: "psicoanalisis-con-adultos",
+                    image: "/images/services/psychoanalysis-adults.png",
                     description:
                         "Psychoanalysis with adults is a clinical practice oriented toward working with subjective suffering, anxiety, and conflicts that manifest in different ways in the subject's life.\n\nIt is a space of speech and listening, where each process is built in a singular way and at its own pace, based on what the person brings as discomfort, suffering, or questioning.\n\nSessions can be held in person or online, according to the agreed framework.",
                     whatsapp: "+573142793431",
@@ -202,6 +217,9 @@ export const translations = {
                 },
                 {
                     title: "Clinical Supervision",
+                    subtitle: "A rigorous reading of the case, transference and the analyst’s position in practice.",
+                    slug: "supervision-clinica",
+                    image: "/images/services/clinical-supervision.png",
                     description:
                         "Clinical supervision is a working space for psychologists and psychoanalysts who are engaged in clinical practice and wish to examine their work, their impasses, and their decisions.\n\nIt consists of a clinical reading device that allows one to situate the analyst's position, the place of transference, and the effects of intervention.\n\nSupervision is oriented by the case, by the singularity of each clinical encounter, and by the questions that emerge there. Online or in-person modality, according to the agreed framework.",
                     whatsapp: "+573142793431",
@@ -209,6 +227,9 @@ export const translations = {
                 },
                 {
                     title: "Study Group",
+                    subtitle: "Reading and clinical discussion focused on the moment an analysis begins.",
+                    slug: "grupo-de-estudio",
+                    image: "/images/services/study-group.png",
                     description:
                         "The study group offers a space for reading and clinical discussion centered on the subject's first encounter with the analyst, from a Lacanian orientation.\n\nWe will work on the ways of arriving at consultation, the formulation of the demand, the installation of the analytic device, and the first effects of transference.\n\nThe work will be based on texts by Sigmund Freud, the seminars of Jacques Lacan, and clinical discussion. It is aimed at advanced students and professionals interested in questioning the clinic at its starting point.\n\nOnline modality, biweekly frequency, Wednesdays from 9 to 11 a.m. (Colombia time).",
                     whatsapp: "+573142793431",

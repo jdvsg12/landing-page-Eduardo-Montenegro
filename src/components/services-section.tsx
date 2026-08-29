@@ -1,113 +1,45 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
-import { motion, useScroll, useTransform } from "motion/react"
+import { useEffect, useState } from "react"
+import { motion } from "motion/react"
 import { ServiceCard } from "@/components/ui/service-card"
 import { TallerCard } from "@/components/ui/taller-card"
 import { useLanguage } from "@/lib/language-context"
 import { getTranslation } from "@/lib/translations"
 import type { Taller } from "@/lib/talleres"
 
-interface ServiceItem {
-  title: string
-  description: string
-  whatsapp?: string
-  message?: string
-}
-
-interface ServicesTranslations {
-  title: string
-  items: ServiceItem[]
-  seeMore?: string
-  seeLess?: string
-  contactWhatsApp?: string
-}
-
-interface Translations {
-  services: ServicesTranslations
-}
-
 export function ServicesSection() {
-  const sectionRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  })
-
   const { language } = useLanguage()
-  const t = getTranslation(language) as Translations
-
-  const contentY = useTransform(scrollYProgress, [0, 0.5, 1], ["15%", "0%", "-15%"])
-
+  const t = getTranslation(language) as any
   const [talleres, setTalleres] = useState<Taller[]>([])
 
   useEffect(() => {
-    fetch("/api/talleres")
-      .then((res) => res.json())
-      .then(setTalleres)
-      .catch(console.error)
+    fetch("/api/talleres").then((res) => res.json()).then(setTalleres).catch(() => setTalleres([]))
   }, [])
 
-  const hasTalleres = talleres.length > 0
-
   return (
-    <section
-      ref={sectionRef}
-      id="services"
-      className={`relative z-20 bg-[#D9D9D9] shadow-[0_-20px_60px_rgba(0,0,0,0.15)] ${
-        hasTalleres ? "min-h-[175vh]" : "min-h-[150vh]"
-      }`}
-    >
-      <div className="sticky top-0 flex min-h-screen items-center overflow-hidden py-20">
-        <motion.div style={{ y: contentY }} className="mx-auto w-full max-w-7xl px-6 lg:px-8">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="mb-20 font-serif text-4xl font-light italic text-neutral-900 lg:text-5xl"
-          >
-            {t.services.title}
-          </motion.h2>
-
-          <div className="grid gap-8 md:grid-cols-3 whitespace-pre-line">
-            {t.services.items.map((service, index) => (
-              <ServiceCard
-                key={index}
-                title={service.title}
-                description={service.description}
-                index={index}
-                whatsapp={service.whatsapp}
-                message={service.message}
-                buttonText={t.services.contactWhatsApp}
-                seeMoreText={t.services.seeMore}
-                seeLessText={t.services.seeLess}
-              />
-            ))}
+    <section id="services" className="relative z-20 bg-muted px-6 py-24 shadow-[0_-20px_60px_rgba(0,0,0,0.12)] lg:px-8 lg:py-36">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-20 flex flex-col gap-8 md:flex-row md:items-end md:justify-between lg:mb-28">
+          <div>
+            <p className="mb-6 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">03 / {t.services.indexLabel || "Prácticas"}</p>
+            <h2 className="font-serif text-5xl font-light italic text-foreground md:text-7xl">{t.services.title}</h2>
           </div>
+          <p className="max-w-sm text-base leading-relaxed text-muted-foreground">{t.services.intro || "Cada práctica tiene su propio tiempo, encuadre y espacio de trabajo."}</p>
+        </div>
 
-          {hasTalleres && (
-            <>
-              <div className="mb-10 mt-16 border-t border-neutral-400" />
+        <div className="flex flex-col gap-6">
+          {t.services.items.map((service: any, index: number) => (
+            <ServiceCard key={service.slug || index} title={service.title} subtitle={service.subtitle} image={service.image} slug={service.slug} index={index} exploreText={t.services.explore || "Explorar servicio"} />
+          ))}
+        </div>
 
-              <motion.h3
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="mb-12 font-serif text-3xl font-light italic text-neutral-900"
-              >
-                Talleres
-              </motion.h3>
-
-              <div className="grid gap-8 md:grid-cols-3">
-                {talleres.map((taller, index) => (
-                  <TallerCard key={taller.id} taller={taller} index={index} />
-                ))}
-              </div>
-            </>
-          )}
-        </motion.div>
+        {talleres.length > 0 && (
+          <div className="mt-32 border-t border-border pt-16">
+            <h3 className="mb-12 font-serif text-4xl font-light italic text-foreground">Talleres</h3>
+            <div className="grid gap-8 md:grid-cols-3">{talleres.map((taller, index) => <TallerCard key={taller.id} taller={taller} index={index} />)}</div>
+          </div>
+        )}
       </div>
     </section>
   )
