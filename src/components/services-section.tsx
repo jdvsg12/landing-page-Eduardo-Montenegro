@@ -1,50 +1,30 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
-import { motion, useScroll, useTransform } from "motion/react"
-import { ServiceCard } from "@/components/ui/service-card"
+import { useState, useEffect } from "react"
+import { motion } from "motion/react"
+import { ServiceTabs } from "@/components/services/service-tabs"
 import { TallerCard } from "@/components/ui/taller-card"
 import { useLanguage } from "@/lib/language-context"
 import { getTranslation } from "@/lib/translations"
+import type { Service } from "@/lib/services"
 import type { Taller } from "@/lib/talleres"
 
-interface ServiceItem {
-  title: string
-  description: string
-  whatsapp?: string
-  message?: string
-}
-
-interface ServicesTranslations {
-  title: string
-  items: ServiceItem[]
-  seeMore?: string
-  seeLess?: string
-  contactWhatsApp?: string
-}
-
-interface Translations {
-  services: ServicesTranslations
-}
-
 export function ServicesSection() {
-  const sectionRef = useRef<HTMLDivElement>(null)
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start end", "end start"],
-  })
-
   const { language } = useLanguage()
-  const t = getTranslation(language) as Translations
+  const t = getTranslation(language)
 
-  const contentY = useTransform(scrollYProgress, [0, 0.5, 1], ["15%", "0%", "-15%"])
-
+  const [services, setServices] = useState<Service[]>([])
   const [talleres, setTalleres] = useState<Taller[]>([])
 
   useEffect(() => {
+    fetch("/api/services")
+      .then((res) => res.json())
+      .then((data) => setServices(Array.isArray(data) ? data : []))
+      .catch(console.error)
+
     fetch("/api/talleres")
       .then((res) => res.json())
-      .then(setTalleres)
+      .then((data) => setTalleres(Array.isArray(data) ? data : []))
       .catch(console.error)
   }, [])
 
@@ -52,62 +32,47 @@ export function ServicesSection() {
 
   return (
     <section
-      ref={sectionRef}
       id="services"
-      className={`relative z-20 bg-[#D9D9D9] shadow-[0_-20px_60px_rgba(0,0,0,0.15)] ${
-        hasTalleres ? "min-h-[175vh]" : "min-h-[150vh]"
-      }`}
+      className="relative z-20 bg-[#D9D9D9] pb-28 shadow-[0_-20px_60px_rgba(0,0,0,0.15)]"
     >
-      <div className="sticky top-0 flex min-h-screen items-center overflow-hidden py-20">
-        <motion.div style={{ y: contentY }} className="mx-auto w-full max-w-7xl px-6 lg:px-8">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="mb-20 font-serif text-4xl font-light italic text-neutral-900 lg:text-5xl"
-          >
+      {/* Encabezado fijo: queda pegado bajo el navbar durante todo el scroll
+          de la sección y se despega al llegar al final. */}
+      <div className="sticky top-20 z-30 bg-[#D9D9D9] pb-6 pt-10">
+        <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
+          <h2 className="font-serif text-4xl font-light italic text-neutral-900 lg:text-5xl">
             {t.services.title}
-          </motion.h2>
+          </h2>
+        </div>
+      </div>
 
-          <div className="grid gap-8 md:grid-cols-3 whitespace-pre-line">
-            {t.services.items.map((service, index) => (
-              <ServiceCard
-                key={index}
-                title={service.title}
-                description={service.description}
-                index={index}
-                whatsapp={service.whatsapp}
-                message={service.message}
-                buttonText={t.services.contactWhatsApp}
-                seeMoreText={t.services.seeMore}
-                seeLessText={t.services.seeLess}
-              />
-            ))}
-          </div>
+      <div className="mx-auto w-full max-w-5xl px-6 lg:px-8">
+        <ServiceTabs
+          services={services}
+          language={language}
+          ctaLabel={t.services.viewService}
+        />
 
-          {hasTalleres && (
-            <>
-              <div className="mb-10 mt-16 border-t border-neutral-400" />
+        {hasTalleres && (
+          <>
+            <div className="mb-10 mt-20 border-t border-neutral-400" />
 
-              <motion.h3
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-                className="mb-12 font-serif text-3xl font-light italic text-neutral-900"
-              >
-                Talleres
-              </motion.h3>
+            <motion.h3
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mb-12 font-serif text-3xl font-light italic text-neutral-900"
+            >
+              Talleres
+            </motion.h3>
 
-              <div className="grid gap-8 md:grid-cols-3">
-                {talleres.map((taller, index) => (
-                  <TallerCard key={taller.id} taller={taller} index={index} />
-                ))}
-              </div>
-            </>
-          )}
-        </motion.div>
+            <div className="grid gap-8 md:grid-cols-3">
+              {talleres.map((taller, index) => (
+                <TallerCard key={taller.id} taller={taller} index={index} />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </section>
   )
