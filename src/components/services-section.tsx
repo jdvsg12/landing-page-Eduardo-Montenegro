@@ -35,21 +35,16 @@ export function ServicesSection() {
       id="services"
       className="relative z-20 bg-[#D9D9D9] pb-28 shadow-[0_-20px_60px_rgba(0,0,0,0.15)]"
     >
-      {/* Encabezado fijo: queda pegado bajo el navbar durante todo el scroll
-          de la sección y se despega al llegar al final. */}
-      <div className="sticky top-20 z-30 bg-[#D9D9D9] pb-6 pt-10">
-        <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
-          <h2 className="font-serif text-4xl font-light italic text-neutral-900 lg:text-5xl">
-            {t.services.title}
-          </h2>
-        </div>
-      </div>
-
-      <div className="mx-auto w-full max-w-5xl px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
         <ServiceTabs
           services={services}
           language={language}
           ctaLabel={t.services.viewService}
+          heading={
+            <h2 className="mb-6 font-serif text-4xl font-light italic text-neutral-900 lg:text-5xl">
+              {t.services.title}
+            </h2>
+          }
         />
 
         {hasTalleres && (
