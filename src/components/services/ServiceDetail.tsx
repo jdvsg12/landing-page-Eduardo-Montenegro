@@ -2,20 +2,15 @@
 
 import Link from "next/link"
 import { motion, useReducedMotion } from "motion/react"
+import { Navbar } from "@/components/navbar"
 import { ServiceLeadForm } from "@/components/services/ServiceLeadForm"
 import { useLanguage } from "@/lib/language-context"
-import { getTranslation, type Language } from "@/lib/translations"
+import { getTranslation } from "@/lib/translations"
 import { pickLocale } from "@/lib/i18n-field"
 import type { Service } from "@/lib/services"
 
-const languages: { code: Language; label: string }[] = [
-    { code: "es", label: "ESP" },
-    { code: "en", label: "ENG" },
-    { code: "fr", label: "FRA" },
-]
-
 export function ServiceDetail({ service }: { service: Service }) {
-    const { language, setLanguage } = useLanguage()
+    const { language } = useLanguage()
     const t = getTranslation(language)
     const reduceMotion = useReducedMotion()
 
@@ -41,30 +36,8 @@ export function ServiceDetail({ service }: { service: Service }) {
 
     return (
         <div className="min-h-screen bg-[#F2F1EE] text-neutral-900">
-            <header className="fixed inset-x-0 top-0 z-50 bg-[#F2F1EE]/85 backdrop-blur-sm">
-                <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4 lg:px-8">
-                    <Link
-                        href="/#services"
-                        className="text-sm text-neutral-500 transition-colors duration-200 hover:text-neutral-900"
-                    >
-                        {t.services.backToServices}
-                    </Link>
-                    <div className="flex gap-4">
-                        {languages.map((lang) => (
-                            <button
-                                key={lang.code}
-                                onClick={() => setLanguage(lang.code)}
-                                className={`text-xs tracking-[0.12em] transition-colors duration-200 ${language === lang.code
-                                    ? "text-neutral-900"
-                                    : "text-neutral-400 hover:text-neutral-700"
-                                    }`}
-                            >
-                                {lang.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </header>
+            <Navbar variant="page" />
+
 
             {/* Apertura: la página empieza por el nombre, no por una fotografía */}
             <section className="mx-auto max-w-5xl px-6 pb-16 pt-32 lg:px-8 lg:pt-44">

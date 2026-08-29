@@ -18,7 +18,17 @@ const HERO_OFFSET = 100
 const CONTACT_OFFSET = 100
 const SERVICES_OFFSET = 100
 
-export function Navbar() {
+interface NavbarProps {
+    /**
+     * "page" para las páginas internas: no hay hero ni secciones que observar,
+     * así que el fondo va sólido, el texto oscuro y los enlaces apuntan a la
+     * home con ancla en vez de a un ancla local que no existe.
+     */
+    variant?: "home" | "page"
+}
+
+export function Navbar({ variant = "home" }: NavbarProps = {}) {
+    const isPage = variant === "page"
     const [isScrolled, setIsScrolled] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
@@ -30,11 +40,13 @@ export function Navbar() {
     const menuButtonRef = useRef<HTMLButtonElement>(null)
     const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 })
 
+    const anchor = (id: string) => (isPage ? `/#${id}` : `#${id}`)
+
     const navLinks = [
-        { name: t.nav.about, href: "#about" },
-        { name: t.nav.services, href: "#services" },
-        { name: t.nav.faq, href: "#faq" },
-        { name: t.nav.contact, href: "#contact" },
+        { name: t.nav.about, href: anchor("about") },
+        { name: t.nav.services, href: anchor("services") },
+        { name: t.nav.faq, href: anchor("faq") },
+        { name: t.nav.contact, href: anchor("contact") },
     ]
 
     const updateButtonPosition = useCallback(() => {
@@ -48,6 +60,12 @@ export function Navbar() {
     }, [])
 
     useEffect(() => {
+        if (isPage) {
+            updateButtonPosition()
+            window.addEventListener("resize", updateButtonPosition, { passive: true })
+            return () => window.removeEventListener("resize", updateButtonPosition)
+        }
+
         const handleScroll = () => {
             const scrollY = window.scrollY
             const heroHeight = window.innerHeight
@@ -80,7 +98,7 @@ export function Navbar() {
             window.removeEventListener("scroll", handleScroll)
             window.removeEventListener("resize", updateButtonPosition)
         }
-    }, [updateButtonPosition])
+    }, [updateButtonPosition, isPage])
 
     useEffect(() => {
         document.body.style.overflow = isMobileMenuOpen ? "hidden" : ""
@@ -99,10 +117,12 @@ export function Navbar() {
         setIsLangMenuOpen(false)
     }
 
-    const isDarkSection = (isInHero || isInContact) && !isInServices
+    const isDarkSection = !isPage && (isInHero || isInContact) && !isInServices
     const textColorClass = isDarkSection ? "text-white" : "text-foreground"
 
-    const navbarBgClass = isInContact
+    const navbarBgClass = isPage
+        ? "bg-[#F2F1EE]/85 backdrop-blur-sm"
+        : isInContact
         ? "bg-[#1a1a1a]"
         : isInServices
             ? "bg-[#D9D9D9]"
@@ -131,7 +151,7 @@ export function Navbar() {
                 className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navbarBgClass}`}
             >
                 <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-                    <Logo textColor={textColorClass} />
+                    <Logo textColor={textColorClass} href={isPage ? "/" : "#"} />
                     <DesktopNav
                         navLinks={navLinks}
                         textColor={textColorClass}
@@ -165,9 +185,9 @@ export function Navbar() {
     )
 }
 
-function Logo({ textColor }: { textColor: string }) {
+function Logo({ textColor, href = "#" }: { textColor: string; href?: string }) {
     return (
-        <a href="#" className={`transition-colors duration-300 ${textColor}`}>
+        <a href={href} className={`transition-colors duration-300 ${textColor}`}>
             <span className="text-lg lg:text-xl font-semibold">Eduardo Montenegro</span>
         </a>
     )
