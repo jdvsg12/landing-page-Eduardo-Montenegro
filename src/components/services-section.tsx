@@ -21,11 +21,7 @@ export function ServicesSection() {
     <section id="services" className="relative z-20 bg-muted px-6 py-24 shadow-[0_-20px_60px_rgba(0,0,0,0.12)] lg:px-8 lg:py-36">
       <div className="mx-auto max-w-7xl">
         <div className="sticky top-16 z-30 -mx-6 mb-12 flex flex-col gap-4 bg-muted/95 px-6 py-6 backdrop-blur-sm md:mb-16 md:flex-row md:items-end md:justify-between lg:-mx-8 lg:px-8 lg:py-8">
-          <div>
-            <p className="mb-6 font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">03 / {t.services.indexLabel || "Prácticas"}</p>
-            <h2 className="font-serif text-5xl font-light italic text-foreground md:text-7xl">{t.services.title}</h2>
-          </div>
-          <p className="max-w-sm text-base leading-relaxed text-muted-foreground">{t.services.intro || "Cada práctica tiene su propio tiempo, encuadre y espacio de trabajo."}</p>
+          <h2 className="font-serif text-5xl font-light italic text-foreground md:text-7xl">{t.services.title}</h2>
         </div>
 
         <div className="flex flex-col gap-6">

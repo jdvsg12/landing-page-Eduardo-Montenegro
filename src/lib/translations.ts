@@ -26,8 +26,6 @@ export const translations = {
         },
         services: {
             title: "Servicios",
-            indexLabel: "Prácticas",
-            intro: "Cada práctica tiene su propio tiempo, encuadre y espacio de trabajo.",
             explore: "Explorar servicio",
             seeMore: "Ver más",
             seeLess: "Ver menos",
