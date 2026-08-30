@@ -10,11 +10,9 @@ interface ServiceCardProps {
   subtitle: string
   image: string
   slug: string
-  index: number
-  exploreText: string
 }
 
-export function ServiceCard({ title, subtitle, image, slug, index, exploreText }: ServiceCardProps) {
+export function ServiceCard({ title, subtitle, image, slug }: ServiceCardProps) {
   const cardRef = useRef<HTMLElement>(null)
   const { scrollYProgress } = useScroll({ target: cardRef, offset: ["start end", "end start"] })
   const imageY = useTransform(scrollYProgress, [0, 0.35, 1], ["-10%", "0%", "4%"])
@@ -22,19 +20,18 @@ export function ServiceCard({ title, subtitle, image, slug, index, exploreText }
   const cardY = useTransform(scrollYProgress, [0, 0.18, 0.72, 1], [72, 0, 0, -12])
   const cardScale = useTransform(scrollYProgress, [0, 0.18, 0.72, 1], [0.94, 1, 1, 0.98])
   const imageOpacity = useTransform(scrollYProgress, [0, 0.12, 0.72, 1], [0, 1, 1, 0])
-  const imageHeight = useTransform(scrollYProgress, [0, 0.18, 0.7, 1], ["38vh", "38vh", "14vh", "0vh"])
+  const imageHeight = useTransform(scrollYProgress, [0, 0.18, 0.7, 1], ["42vh", "42vh", "12vh", "0vh"])
   const detailOpacity = useTransform(scrollYProgress, [0, 0.12, 0.66, 0.9], [0, 1, 1, 1])
-  const reversed = index % 2 !== 0
 
   return (
     <motion.article ref={cardRef} className="relative min-h-[115vh] group motion-reduce:min-h-0">
       <motion.div style={{ y: cardY, scale: cardScale }} className="sticky top-24 motion-reduce:static motion-reduce:transform-none">
         <Link
           href={`/servicios/${slug}`}
-          aria-label={`${exploreText}: ${title}`}
-          className={`flex min-h-[62vh] flex-col overflow-hidden bg-background outline-none transition-shadow duration-500 hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4 md:flex-row ${reversed ? "md:flex-row-reverse" : ""}`}
+          aria-label={`Ver servicio: ${title}`}
+          className="flex min-h-[62vh] flex-col overflow-hidden bg-background outline-none transition-shadow duration-500 hover:shadow-2xl focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-4"
         >
-          <motion.div style={{ opacity: imageOpacity, height: imageHeight }} className="relative min-h-0 shrink-0 overflow-hidden md:h-auto md:min-h-0 md:flex-1">
+          <motion.div style={{ opacity: imageOpacity, height: imageHeight }} className="relative min-h-0 w-full shrink-0 overflow-hidden">
             <motion.div style={{ y: imageY, scale: imageScale }} className="absolute inset-[-10%]">
               <Image src={image} alt="" fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover grayscale-[18%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0" />
             </motion.div>

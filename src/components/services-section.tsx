@@ -26,7 +26,7 @@ export function ServicesSection() {
 
         <div className="flex flex-col gap-6">
           {t.services.items.map((service: any, index: number) => (
-            <ServiceCard key={service.slug || index} title={service.title} subtitle={service.subtitle} image={service.image} slug={service.slug} index={index} exploreText={t.services.explore || "Explorar servicio"} />
+            <ServiceCard key={service.slug || index} title={service.title} subtitle={service.subtitle} image={service.image} slug={service.slug} />
           ))}
         </div>
 
