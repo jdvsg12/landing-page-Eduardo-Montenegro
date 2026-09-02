@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { getPublishedServices, getServiceBySlug } from "@/lib/db-services"
-import { LanguageProvider } from "@/lib/language-context"
 import { ServiceDetail } from "@/components/services/ServiceDetail"
 import { pickLocale } from "@/lib/i18n-field"
 
@@ -38,9 +37,5 @@ export default async function ServicePage({
     notFound()
   }
 
-  return (
-    <LanguageProvider>
-      <ServiceDetail service={service} />
-    </LanguageProvider>
-  )
+  return <ServiceDetail service={service} />
 }

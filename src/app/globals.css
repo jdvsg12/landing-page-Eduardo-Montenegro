@@ -4,6 +4,13 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --sage: #8F958B;
+  --sage-deep: #3f443d;
+  --sage-ink: #4a5048;
+  --paper: #F2F1EE;
+  --surface: #D9D9D9;
+  --ink: #1a1a1a;
+
   /* Custom color palette based on the design - olive/sage green theme */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -36,7 +43,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(1 0 0);
+  --background: #F2F1EE;
   --foreground: oklch(0.145 0 0);
 }
 
@@ -76,8 +83,14 @@
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-sage: var(--sage);
+  --color-sage-deep: var(--sage-deep);
+  --color-sage-ink: var(--sage-ink);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -126,8 +139,36 @@
   html {
     scroll-behavior: smooth;
   }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-paper text-foreground;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--sage) 45%, transparent);
+    color: var(--ink);
+  }
+}
+
+@keyframes clip-reveal-up {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.clip-reveal-hero {
+  animation: clip-reveal-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .clip-reveal-hero {
+    animation: none;
   }
 }
 

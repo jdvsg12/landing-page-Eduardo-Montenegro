@@ -6,6 +6,7 @@ import { ChevronDown } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { getTranslation, type Language } from "@/lib/translations"
 import { socialLinks, type SocialLink } from "@/lib/social-links"
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion"
 
 const languages: { code: Language; label: string }[] = [
     { code: "es", label: "ESP" },
@@ -107,6 +108,16 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
         }
     }, [isMobileMenuOpen])
 
+    useEffect(() => {
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") return
+            setIsLangMenuOpen(false)
+            setIsMobileMenuOpen(false)
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [])
+
     const handleMenuToggle = () => {
         updateButtonPosition()
         setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -121,13 +132,13 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
     const textColorClass = isDarkSection ? "text-white" : "text-foreground"
 
     const navbarBgClass = isPage
-        ? "bg-[#F2F1EE]/85 backdrop-blur-sm"
+        ? "bg-paper/85 backdrop-blur-sm"
         : isInContact
-        ? "bg-[#1a1a1a]"
+        ? "bg-ink"
         : isInServices
-            ? "bg-[#D9D9D9]"
+            ? "bg-surface"
             : isScrolled && !isInHero
-                ? "bg-white/60 backdrop-blur-2xl"
+                ? "bg-paper"
                 : "bg-transparent"
 
     const menuButtonBgClass = isMobileMenuOpen
@@ -144,11 +155,8 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
 
     return (
         <>
-            <motion.header
-                initial={{ y: -100 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navbarBgClass}`}
+            <header
+                className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${navbarBgClass}`}
             >
                 <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
                     <Logo textColor={textColorClass} href={isPage ? "/" : "#"} />
@@ -160,6 +168,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
                         language={language}
                         onLanguageChange={handleLanguageChange}
                         isInContact={isInContact}
+                        languageLabel={t.nav.language}
                     />
                     <MobileMenuButton
                         ref={menuButtonRef}
@@ -167,9 +176,11 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
                         bgClass={menuButtonBgClass}
                         hamburgerClass={hamburgerColorClass}
                         isOpen={isMobileMenuOpen}
+                        openLabel={t.nav.openMenu}
+                        closeLabel={t.nav.closeMenu}
                     />
                 </nav>
-            </motion.header>
+            </header>
 
             <MobileMenu
                 isOpen={isMobileMenuOpen}
@@ -201,6 +212,7 @@ interface DesktopNavProps {
     language: Language
     onLanguageChange: (lang: Language) => void
     isInContact: boolean
+    languageLabel: string
 }
 
 function DesktopNav({
@@ -210,7 +222,8 @@ function DesktopNav({
     setIsLangMenuOpen,
     language,
     onLanguageChange,
-    isInContact
+    isInContact,
+    languageLabel,
 }: DesktopNavProps) {
     return (
         <div className="hidden items-center gap-8 md:flex">
@@ -233,6 +246,7 @@ function DesktopNav({
                 onLanguageChange={onLanguageChange}
                 textColor={textColor}
                 isInContact={isInContact}
+                languageLabel={languageLabel}
             />
         </div>
     )
@@ -245,6 +259,7 @@ interface LanguageSelectorProps {
     onLanguageChange: (lang: Language) => void
     textColor: string
     isInContact: boolean
+    languageLabel: string
 }
 
 function LanguageSelector({
@@ -253,13 +268,18 @@ function LanguageSelector({
     language,
     onLanguageChange,
     textColor,
-    isInContact
+    isInContact,
+    languageLabel,
 }: LanguageSelectorProps) {
     return (
         <div className="relative">
             <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-1 text-base font-medium transition-colors duration-300 lg:text-lg ${textColor} hover:opacity-70`}
+                aria-expanded={isOpen}
+                aria-haspopup="listbox"
+                aria-label={languageLabel}
+                className={`flex min-h-11 items-center gap-1 text-base font-medium transition-colors duration-300 lg:text-lg ${textColor} hover:opacity-70`}
             >
                 {languages.find((l) => l.code === language)?.label}
                 <ChevronDown size={16} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -297,16 +317,20 @@ interface MobileMenuButtonProps {
     bgClass: string
     hamburgerClass: string
     isOpen: boolean
+    openLabel: string
+    closeLabel: string
 }
 
 const MobileMenuButton = React.forwardRef<HTMLButtonElement, MobileMenuButtonProps>(
-    ({ onClick, bgClass, hamburgerClass, isOpen }, ref) => {
+    ({ onClick, bgClass, hamburgerClass, isOpen, openLabel, closeLabel }, ref) => {
         return (
             <button
                 ref={ref}
+                type="button"
                 onClick={onClick}
+                aria-expanded={isOpen}
+                aria-label={isOpen ? closeLabel : openLabel}
                 className={`relative z-[60] flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 md:hidden ${bgClass}`}
-                aria-label="Toggle menu"
             >
                 <div className="flex flex-col items-center justify-center gap-1.5">
                     <motion.span
@@ -352,20 +376,35 @@ function MobileMenu({
     onLanguageChange,
     t
 }: MobileMenuProps) {
+    const reduceMotion = usePrefersReducedMotion()
+
     return (
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    initial={{ clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
-                    animate={{ clipPath: `circle(150% at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
-                    exit={{ clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
-                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                    className="fixed inset-0 z-[55] bg-neutral-900 md:hidden"
+                    initial={
+                        reduceMotion
+                            ? { opacity: 0 }
+                            : { clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }
+                    }
+                    animate={
+                        reduceMotion
+                            ? { opacity: 1 }
+                            : { clipPath: `circle(150% at ${buttonPosition.x}px ${buttonPosition.y}px)` }
+                    }
+                    exit={
+                        reduceMotion
+                            ? { opacity: 0 }
+                            : { clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }
+                    }
+                    transition={{ duration: reduceMotion ? 0.2 : 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    className="fixed inset-0 z-[55] bg-ink md:hidden"
                 >
                     <button
+                        type="button"
                         onClick={onClose}
-                        className="absolute right-6 top-6 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white transition-transform hover:scale-110"
-                        aria-label="Close menu"
+                        className="absolute right-6 top-6 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white"
+                        aria-label={t.nav.closeMenu}
                     >
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-neutral-900">
                             <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -374,25 +413,17 @@ function MobileMenu({
 
                     <div className="flex h-dvh flex-col justify-between px-8 py-16">
                         <div>
-                            <motion.a
+                            <a
                                 href="#"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.2 }}
                                 className="mb-8 block text-white"
                                 onClick={onClose}
                             >
                                 <span className="text-xl font-normal">Eduardo Montenegro</span>
-                            </motion.a>
+                            </a>
 
-                            <ul className="flex flex-col gap-6 mb-8">
-                                {navLinks.map((link, index) => (
-                                    <motion.li
-                                        key={link.name}
-                                        initial={{ opacity: 0, x: -30 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.3 + index * 0.1 }}
-                                    >
+                            <ul className="mb-8 flex flex-col gap-6">
+                                {navLinks.map((link) => (
+                                    <li key={link.name}>
                                         <a
                                             href={link.href}
                                             onClick={onClose}
@@ -400,13 +431,13 @@ function MobileMenu({
                                         >
                                             {link.name}
                                         </a>
-                                    </motion.li>
+                                    </li>
                                 ))}
                             </ul>
                         </div>
 
                         <div className="flex flex-col gap-8">
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                            <div>
                                 <h4 className="mb-4 text-sm font-medium uppercase tracking-wider text-neutral-500">{t.nav.contact}</h4>
                                 <a href="mailto:formacion@eduardomontenegro.com" className="mb-2 block text-sm text-white hover:text-neutral-400">
                                     formacion@eduardomontenegro.com
@@ -414,9 +445,9 @@ function MobileMenu({
                                 <a href="tel:+573142793431" className="block text-sm text-white hover:text-neutral-400">
                                     +57 314 279 3431
                                 </a>
-                            </motion.div>
+                            </div>
                             <div className="flex flex-row justify-between">
-                                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+                                <div>
                                     <h4 className="mb-4 text-sm font-medium uppercase tracking-wider text-neutral-500">Social Media</h4>
                                     <ul className="flex flex-col gap-2">
                                         {socialLinks.map((link) => (
@@ -432,14 +463,9 @@ function MobileMenu({
                                             </li>
                                         ))}
                                     </ul>
-                                </motion.div>
+                                </div>
 
-                                <motion.div
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.7 }}
-                                    className="col-span-2"
-                                >
+                                <div className="col-span-2">
                                     <h4 className="mb-4 text-sm font-medium uppercase tracking-wider text-neutral-500">Language</h4>
                                     <div className="flex flex-col gap-4">
                                         {languages.map((lang) => (
@@ -455,7 +481,7 @@ function MobileMenu({
                                             </button>
                                         ))}
                                     </div>
-                                </motion.div>
+                                </div>
                             </div>
                         </div>
                     </div>

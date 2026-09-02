@@ -1,209 +1,144 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Link from "next/link"
-import { motion, useReducedMotion } from "motion/react"
+import { useRef, type ReactNode } from "react"
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion"
 import { pickLocale } from "@/lib/i18n-field"
 import type { Service } from "@/lib/services"
 import type { Language } from "@/lib/translations"
+import { MediaImage } from "@/components/media-image"
 
-/* Tres espacios de consulta, uno abierto a la vez. El abierto muestra la imagen
-   completa; los demás quedan como pestañas en las que se puede volver a entrar
-   con un clic.
+/* Tres espacios de consulta apilados: cada tarjeta se ancla en su propio `top`,
+   escalonado el alto de una cabecera respecto a la anterior, con `z-index`
+   creciente. Al bajar, la siguiente tarjeta sube y tapa el cuerpo de la
+   anterior dejando su cabecera fija —eso es el tab, y por eso no se va.
 
-   Cada servicio tiene su propio tramo de scroll dentro de un contenedor alto,
-   con la lista fijada encima. Así el ritmo no depende de lo alta que sea cada
-   fila —que en móvil las hacía cambiar demasiado rápido— sino de una distancia
-   de scroll explícita. */
+   Es CSS puro: sin listeners de scroll, sin estado y sin animación. */
 
-/** Tramo de scroll por servicio, en alturas de pantalla. */
-const SLOT_VH = { base: 0.9, md: 0.7 }
+/* La geometría del apilado vive en variables CSS sobre cada <li>:
+     --offset  navbar (60px) + barra de título, donde se ancla la primera
+     --tab     alto de la cabecera, que es el escalón entre una y la siguiente */
 
 interface ServiceTabsProps {
     services: Service[]
     language: Language
     ctaLabel: string
-    /** Se fija junto con la lista, para que no haya que cuadrar dos `sticky` distintos. */
+    /** Se fija junto con la lista, para no cuadrar dos `sticky` distintos. */
     heading?: ReactNode
 }
 
 export function ServiceTabs({ services, language, ctaLabel, heading }: ServiceTabsProps) {
-    const runwayRef = useRef<HTMLDivElement>(null)
-    const reduceMotion = useReducedMotion()
-    const [activeIndex, setActiveIndex] = useState(0)
-    const [slotVh, setSlotVh] = useState(SLOT_VH.base)
+    const listRef = useRef<HTMLUListElement>(null)
+    const reduceMotion = usePrefersReducedMotion()
 
-    useEffect(() => {
-        const mq = window.matchMedia("(min-width: 768px)")
-        const update = () => setSlotVh(mq.matches ? SLOT_VH.md : SLOT_VH.base)
-        update()
-        mq.addEventListener("change", update)
-        return () => mq.removeEventListener("change", update)
-    }, [])
+    /* Al estar siempre ancladas, el navegador considera que las tarjetas ya son
+       visibles y un ancla `#id` no scrollea. Tampoco sirve `offsetTop`, que en
+       un `sticky` devuelve la posición anclada. Hay que reconstruir la posición
+       de flujo sumando las alturas anteriores. */
+    const revealService = (index: number) => {
+        const list = listRef.current
+        if (!list) return
 
-    /* El scroll recorrido dentro del contenedor decide qué servicio está
-       abierto. Se lee con getBoundingClientRect en un rAF propio: los hooks de
-       scroll de Motion sobre un contenedor sticky entran en bucle de medición. */
-    const syncActive = useCallback(() => {
-        const runway = runwayRef.current
-        if (!runway || services.length === 0) return
+        const cards = Array.from(list.children) as HTMLElement[]
+        const gap = parseFloat(getComputedStyle(list).rowGap) || 0
 
-        const rect = runway.getBoundingClientRect()
-        const travelled = -rect.top
-        const slot = rect.height / services.length
-        if (slot <= 0) return
+        let flowTop = list.getBoundingClientRect().top + window.scrollY
+        for (let i = 0; i < index; i++) flowTop += cards[i].offsetHeight + gap
 
-        const next = Math.min(
-            services.length - 1,
-            Math.max(0, Math.floor(travelled / slot))
-        )
-        setActiveIndex((current) => (current === next ? current : next))
-    }, [services.length])
-
-    useEffect(() => {
-        if (services.length === 0) return
-
-        let frame = 0
-        const onScroll = () => {
-            cancelAnimationFrame(frame)
-            frame = requestAnimationFrame(syncActive)
-        }
-
-        syncActive()
-        window.addEventListener("scroll", onScroll, { passive: true })
-        window.addEventListener("resize", onScroll, { passive: true })
-
-        return () => {
-            cancelAnimationFrame(frame)
-            window.removeEventListener("scroll", onScroll)
-            window.removeEventListener("resize", onScroll)
-        }
-    }, [services.length, syncActive])
-
-    /* Pulsar una pestaña lleva el scroll al tramo de ese servicio, que es lo que
-       lo abre. Así el clic y el scroll no se contradicen. */
-    const openService = (index: number) => {
-        const runway = runwayRef.current
-        if (!runway) return
-
-        /* offsetTop es relativo al contenedor posicionado, no al documento:
-           hay que partir del rect en pantalla más el scroll actual. */
-        const rect = runway.getBoundingClientRect()
-        const documentTop = rect.top + window.scrollY
-        const slot = rect.height / services.length
+        const stickyTop = parseFloat(getComputedStyle(cards[index]).top) || 0
 
         window.scrollTo({
-            top: documentTop + slot * index + slot / 2,
+            top: flowTop - stickyTop,
             behavior: reduceMotion ? "instant" : "smooth",
         })
-        setActiveIndex(index)
     }
 
-    if (services.length === 0) return null
-
-    const transition = { duration: reduceMotion ? 0 : 0.45, ease: [0.16, 1, 0.3, 1] as const }
+    if (services.length === 0) {
+        return (
+            <div className="sticky top-[60px] z-40 -mx-6 mb-8 bg-surface px-6 py-6 lg:-mx-8 lg:px-8 lg:py-8">
+                {heading}
+            </div>
+        )
+    }
 
     return (
-        <div
-            ref={runwayRef}
-            className="relative"
-            style={{ height: `${services.length * slotVh * 100}vh` }}
-        >
-            <div className="sticky top-20 bg-[#D9D9D9] pt-8">
+        <>
+            <div className="sticky top-[60px] z-40 -mx-6 mb-8 bg-surface px-6 py-6 lg:-mx-8 lg:px-8 lg:py-8">
                 {heading}
-                <ul className="space-y-3">
-                    {services.map((service, index) => {
-                        const isOpen = index === activeIndex
-                        const title = pickLocale(service.title, language)
-                        const kicker = pickLocale(service.kicker, language)
-                        const panelId = `service-panel-${service.slug}`
-
-                        return (
-                            <li key={service.id}>
-                                {isOpen ? (
-                                    <motion.div
-                                        id={panelId}
-                                        initial={reduceMotion ? false : { opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        transition={transition}
-                                    >
-                                        {/* A sangre en móvil, para que la imagen gane todo el ancho */}
-                                        <div className="-mx-6 h-[280px] overflow-hidden sm:mx-0 md:h-[460px]">
-                                            {service.coverImage ? (
-                                                <img
-                                                    src={service.coverImage}
-                                                    alt=""
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="h-full w-full bg-gradient-to-br from-[#8F958B] to-[#3f443d]" />
-                                            )}
-                                        </div>
-
-                                        <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3 pt-5">
-                                            <div className="min-w-0">
-                                                <h3 className="text-xl uppercase tracking-[0.09em] text-neutral-900 lg:text-3xl">
-                                                    {title}
-                                                </h3>
-                                                {kicker && (
-                                                    <p className="mt-2 text-sm text-neutral-600 lg:text-base">
-                                                        {kicker}
-                                                    </p>
-                                                )}
-                                            </div>
-
-                                            <Link
-                                                href={`/servicios/${service.slug}`}
-                                                className="whitespace-nowrap border-b border-neutral-400 pb-1 text-sm text-neutral-800 transition-colors duration-200 hover:border-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-900"
-                                            >
-                                                {ctaLabel} →
-                                            </Link>
-                                        </div>
-                                    </motion.div>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={() => openService(index)}
-                                        aria-expanded={false}
-                                        aria-controls={panelId}
-                                        className="group -mx-6 flex h-20 w-[calc(100%+3rem)] items-stretch gap-4 bg-[#C4C4C0] pr-5 text-left transition-colors duration-200 hover:bg-[#BCBCB7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1a1a1a] sm:mx-0 sm:w-full md:h-[84px]"
-                                    >
-                                        <span className="w-24 shrink-0 overflow-hidden md:w-32">
-                                            {service.coverImage ? (
-                                                <img
-                                                    src={service.coverImage}
-                                                    alt=""
-                                                    className="h-full w-full object-cover"
-                                                />
-                                            ) : (
-                                                <span className="block h-full w-full bg-gradient-to-br from-[#8F958B] to-[#3f443d]" />
-                                            )}
-                                        </span>
-
-                                        <span className="flex min-w-0 flex-1 flex-col justify-center py-2">
-                                            <span className="truncate text-sm uppercase tracking-[0.09em] text-neutral-900 lg:text-base">
-                                                {title}
-                                            </span>
-                                            {kicker && (
-                                                <span className="truncate text-xs text-neutral-600 lg:text-sm">
-                                                    {kicker}
-                                                </span>
-                                            )}
-                                        </span>
-
-                                        <span
-                                            aria-hidden
-                                            className="flex items-center self-center text-neutral-500 transition-transform duration-200 group-hover:translate-x-0.5"
-                                        >
-                                            ↗
-                                        </span>
-                                    </button>
-                                )}
-                            </li>
-                        )
-                    })}
-                </ul>
             </div>
-        </div>
+
+            {/* El padding inferior es imprescindible: un `sticky` no puede salir de
+                su bloque contenedor, así que sin pista debajo las tarjetas dejan
+                de estar ancladas al llegar al final y se recortan todas a la
+                misma posición, que es justo lo que hacía desaparecer los tabs. */}
+            <ul ref={listRef} className="flex flex-col gap-6 pb-[55vh]">
+                {services.map((service, index) => {
+                    const title = pickLocale(service.title, language)
+                    const kicker = pickLocale(service.kicker, language)
+                    const anchor = `svc-${service.slug}`
+
+                    return (
+                        <li
+                            key={service.id}
+                            id={anchor}
+                            className="sticky [--offset:148px] md:[--offset:196px] [--tab:72px] md:[--tab:84px]"
+                            style={{
+                                top: `calc(var(--offset) + ${index} * var(--tab))`,
+                                zIndex: index + 1,
+                                scrollMarginTop: `calc(var(--offset) + ${index} * var(--tab))`,
+                            }}
+                        >
+                            {/* El fondo opaco es lo que tapa la tarjeta de abajo al apilarse */}
+                            <article className="bg-surface">
+                                <a
+                                    href={`#${anchor}`}
+                                    onClick={(event) => {
+                                        event.preventDefault()
+                                        revealService(index)
+                                    }}
+                                    className="flex h-[72px] items-center justify-between gap-6 border-t border-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 md:h-[84px]"
+                                >
+                                    <span className="min-w-0">
+                                        <span className="block truncate text-lg uppercase tracking-[0.09em] text-neutral-900 lg:text-2xl">
+                                            {title}
+                                        </span>
+                                        {kicker && (
+                                            <span className="mt-1 block truncate text-sm text-neutral-600">
+                                                {kicker}
+                                            </span>
+                                        )}
+                                    </span>
+                                    <span aria-hidden className="shrink-0 text-neutral-500">
+                                        ↗
+                                    </span>
+                                </a>
+
+                                {/* A sangre en móvil, para que la imagen gane todo el ancho */}
+                                <div className="relative -mx-6 h-[280px] overflow-hidden sm:mx-0 md:h-[460px]">
+                                    {service.coverImage ? (
+                                        <MediaImage
+                                            src={service.coverImage}
+                                            alt={title}
+                                            sizes="(min-width: 1024px) 80vw, 100vw"
+                                        />
+                                    ) : (
+                                        <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
+                                    )}
+                                </div>
+
+                                <div className="flex justify-end pb-6 pt-4">
+                                    <Link
+                                        href={`/servicios/${service.slug}`}
+                                        className="border-b border-neutral-400 pb-1 text-sm text-neutral-800 transition-colors duration-200 hover:border-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-900"
+                                    >
+                                        {ctaLabel} →
+                                    </Link>
+                                </div>
+                            </article>
+                        </li>
+                    )
+                })}
+            </ul>
+        </>
     )
 }

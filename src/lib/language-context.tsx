@@ -1,6 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { LANGUAGE_COOKIE, parseLanguage, languageToHtmlLang, SUPPORTED_LANGUAGES } from "@/lib/language"
 import type { Language } from "./translations"
 
 type LanguageContextType = {
@@ -11,31 +12,47 @@ type LanguageContextType = {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
 const STORAGE_KEY = "em-language"
-const SUPPORTED: Language[] = ["es", "en", "fr"]
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-    const [language, setLanguageState] = useState<Language>("es")
+function persistLanguage(lang: Language) {
+    try {
+        window.localStorage.setItem(STORAGE_KEY, lang)
+    } catch {
+        // Sin persistencia, el idioma solo vive en esta página.
+    }
+    document.cookie = `${LANGUAGE_COOKIE}=${lang}; path=/; max-age=31536000; SameSite=Lax`
+}
 
-    // Se lee después del montaje para no romper la hidratación: el servidor
-    // siempre renderiza en español y el cliente ajusta si hay preferencia guardada.
+export function LanguageProvider({
+    children,
+    initialLanguage = "es",
+}: {
+    children: ReactNode
+    initialLanguage?: Language
+}) {
+    const [language, setLanguageState] = useState<Language>(initialLanguage)
+
     useEffect(() => {
         try {
-            const stored = window.localStorage.getItem(STORAGE_KEY) as Language | null
-            if (stored && SUPPORTED.includes(stored)) {
-                setLanguageState(stored)
+            const stored = window.localStorage.getItem(STORAGE_KEY)
+            const parsed = parseLanguage(stored)
+            if (stored && SUPPORTED_LANGUAGES.includes(parsed) && parsed !== language) {
+                setLanguageState(parsed)
+                persistLanguage(parsed)
             }
         } catch {
-            // localStorage bloqueado (modo privado, cookies deshabilitadas): se queda en "es".
+            // localStorage bloqueado: se queda en el idioma del servidor.
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- only hydrate from storage once
     }, [])
+
+    useEffect(() => {
+        document.documentElement.lang = languageToHtmlLang(language)
+    }, [language])
 
     const setLanguage = (lang: Language) => {
         setLanguageState(lang)
-        try {
-            window.localStorage.setItem(STORAGE_KEY, lang)
-        } catch {
-            // Sin persistencia, el idioma solo vive en esta página.
-        }
+        persistLanguage(lang)
+        document.documentElement.lang = languageToHtmlLang(lang)
     }
 
     return <LanguageContext.Provider value={{ language, setLanguage }}>{children}</LanguageContext.Provider>

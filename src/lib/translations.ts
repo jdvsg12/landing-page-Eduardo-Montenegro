@@ -7,11 +7,17 @@ export const translations = {
             services: "Servicios",
             faq: "FAQ",
             contact: "Contacto",
+            skipToContent: "Saltar al contenido",
+            openMenu: "Abrir menú",
+            closeMenu: "Cerrar menú",
+            language: "Idioma",
         },
         hero: {
-            title: "PSICÓLOGO - PSICONALISTA",
+            title: "PSICÓLOGO - PSICOANALISTA",
             subtitle: "Esp. Mg. Psicopatología y Salud Mental",
+            portraitAlt: "Eduardo Montenegro Flórez, psicólogo y psicoanalista",
         },
+        slogan: "Ningún sufrimiento es insignificante",
         about: {
             title: "Sobre mí",
             description:
@@ -40,6 +46,8 @@ export const translations = {
             detailFormSuccess: "¡Listo! Recibí tus datos y te contactaré pronto.",
             detailFormError: "No se pudo enviar. Por favor intenta de nuevo.",
             contactEmail: "Contactar por email",
+            loadError: "No se pudieron cargar los servicios. Recarga la página o escríbeme por WhatsApp.",
+            empty: "Pronto publicaré los servicios vigentes. Mientras tanto, puedes escribirme.",
             items: [
                 {
                     title: "Psicoanálisis con adultos",
@@ -77,6 +85,17 @@ export const translations = {
             message: "Tu mensaje",
             messagePlaceholder: "Este es un mensaje para Eduardo...",
             send: "Enviar",
+            sending: "Enviando...",
+            success: "Mensaje enviado. Te contactaré pronto.",
+            error: "No se pudo enviar el mensaje. Intenta de nuevo o escríbeme por WhatsApp.",
+            termsBefore: "Acepto los",
+            termsLink: "términos y condiciones",
+            termsAfter: "y la política de privacidad",
+            optionPsychoanalysis: "Psicoanálisis con adultos",
+            optionSupervision: "Supervisión clínica",
+            optionStudyGroup: "Grupo de estudio",
+            phoneLabel: "Teléfono",
+            whatsappLabel: "WhatsApp",
             contactTitle: "Contacto",
             socialMedia: "Redes Sociales",
             validation: {
@@ -169,7 +188,16 @@ export const translations = {
             ],
         },
         footer: {
-            socialMedia: "Social Media",
+            socialMedia: "Redes sociales",
+        },
+        talleres: {
+            title: "Talleres",
+            badge: "Taller",
+            viewTaller: "Ver taller",
+            interestedTitle: "¿Te interesa este taller?",
+            interestedSubtitle: "Escríbeme por WhatsApp para más información o para reservar tu cupo.",
+            contactWhatsApp: "Contactar por WhatsApp",
+            whatsappMessage: "Hola, me interesa el taller \"{title}\". Quisiera más información.",
         },
     },
     en: {
@@ -178,11 +206,17 @@ export const translations = {
             services: "Services",
             faq: "FAQ",
             contact: "Contact",
+            skipToContent: "Skip to content",
+            openMenu: "Open menu",
+            closeMenu: "Close menu",
+            language: "Language",
         },
         hero: {
             title: "PSYCHOLOGIST - PSYCHOANALYST",
             subtitle: "Specialist. Master in Psychopathology and Mental Health",
+            portraitAlt: "Eduardo Montenegro Flórez, psychologist and psychoanalyst",
         },
+        slogan: "No suffering is insignificant",
         about: {
             title: "About me",
             title1: "About",
@@ -235,6 +269,8 @@ export const translations = {
                     message: "Hello, I want more information about the study group"
                 }
             ],
+            loadError: "Services could not be loaded. Refresh the page or write to me on WhatsApp.",
+            empty: "Current services will be published here soon. In the meantime, you can write to me.",
         },
         contact: {
             title: "Leave me a message",
@@ -249,6 +285,17 @@ export const translations = {
             message: "Your message",
             messagePlaceholder: "This is a message to Eduardo...",
             send: "Send it",
+            sending: "Sending...",
+            success: "Message sent. I will contact you soon.",
+            error: "The message could not be sent. Please try again or write to me on WhatsApp.",
+            termsBefore: "I accept the",
+            termsLink: "terms and conditions",
+            termsAfter: "and the privacy policy",
+            optionPsychoanalysis: "Psychoanalysis with adults",
+            optionSupervision: "Clinical supervision",
+            optionStudyGroup: "Study group",
+            phoneLabel: "Phone",
+            whatsappLabel: "WhatsApp",
             contactTitle: "Contact",
             socialMedia: "Social Media",
             validation: {
@@ -343,6 +390,15 @@ export const translations = {
         footer: {
             socialMedia: "Social Media",
         },
+        talleres: {
+            title: "Workshops",
+            badge: "Workshop",
+            viewTaller: "View workshop",
+            interestedTitle: "Interested in this workshop?",
+            interestedSubtitle: "Message me on WhatsApp for more information or to reserve a place.",
+            contactWhatsApp: "Contact me on WhatsApp",
+            whatsappMessage: "Hello, I am interested in the workshop \"{title}\". I would like more information.",
+        },
     },
     fr: {
         nav: {
@@ -350,11 +406,17 @@ export const translations = {
             services: "Services",
             faq: "FAQ",
             contact: "Contact",
+            skipToContent: "Aller au contenu",
+            openMenu: "Ouvrir le menu",
+            closeMenu: "Fermer le menu",
+            language: "Langue",
         },
         hero: {
             title: "PSYCHOLOGUE - PSYCHANALYSTE",
             subtitle: "Spécialiste. Maîtrise en Psychopathologie et Santé Mentale",
+            portraitAlt: "Eduardo Montenegro Flórez, psychologue et psychanalyste",
         },
+        slogan: "Aucune souffrance n'est insignifiante",
         about: {
             title: "À propos de moi",
             title1: "À propos",
@@ -385,6 +447,8 @@ export const translations = {
             detailFormSuccess: "C'est fait ! J'ai reçu vos coordonnées et je vous contacterai bientôt.",
             detailFormError: "Envoi impossible. Veuillez réessayer.",
             contactEmail: "Contacter par email",
+            loadError: "Impossible de charger les services. Rechargez la page ou écrivez-moi sur WhatsApp.",
+            empty: "Les services en cours seront publiés ici bientôt. En attendant, vous pouvez m'écrire.",
             items: [
                 {
                     title: "Psychanalyse avec des adultes",
@@ -422,6 +486,17 @@ export const translations = {
             message: "Votre message",
             messagePlaceholder: "Ceci est un message pour Eduardo...",
             send: "Envoyer",
+            sending: "Envoi en cours...",
+            success: "Message envoyé. Je vous contacterai bientôt.",
+            error: "Le message n'a pas pu être envoyé. Réessayez ou écrivez-moi sur WhatsApp.",
+            termsBefore: "J'accepte les",
+            termsLink: "conditions générales",
+            termsAfter: "et la politique de confidentialité",
+            optionPsychoanalysis: "Psychanalyse avec des adultes",
+            optionSupervision: "Supervision clinique",
+            optionStudyGroup: "Groupe d'étude",
+            phoneLabel: "Téléphone",
+            whatsappLabel: "WhatsApp",
             contactTitle: "Contact",
             socialMedia: "Réseaux Sociaux",
             validation: {
@@ -515,6 +590,15 @@ export const translations = {
         },
         footer: {
             socialMedia: "Réseaux Sociaux",
+        },
+        talleres: {
+            title: "Ateliers",
+            badge: "Atelier",
+            viewTaller: "Voir l'atelier",
+            interestedTitle: "Cet atelier vous intéresse ?",
+            interestedSubtitle: "Écrivez-moi sur WhatsApp pour plus d'informations ou pour réserver votre place.",
+            contactWhatsApp: "Contacter via WhatsApp",
+            whatsappMessage: "Bonjour, l'atelier « {title} » m'intéresse. Je souhaiterais plus d'informations.",
         },
     },
 }

@@ -65,16 +65,16 @@ export function ServiceLeadForm({ slug }: ServiceLeadFormProps) {
 
     if (status === "success") {
         return (
-            <div className="bg-[#1a1a1a] p-8 text-white">
+            <div className="bg-ink p-8 text-white">
                 <p className="text-lg">{t.services.detailFormSuccess}</p>
             </div>
         )
     }
 
     return (
-        <div className="bg-[#1a1a1a] p-8">
+        <div className="bg-ink p-8">
             <p className="mb-2 text-lg font-medium text-white">{t.services.detailFormTitle}</p>
-            <p className="mb-8 text-sm text-neutral-400">{t.services.detailFormSubtitle}</p>
+            <p className="mb-8 text-sm text-white/80">{t.services.detailFormSubtitle}</p>
 
             <form className="space-y-8" onSubmit={handleSubmit} noValidate>
                 <AnimatedInput
@@ -120,29 +120,38 @@ export function ServiceLeadForm({ slug }: ServiceLeadFormProps) {
                 />
 
                 <div className="flex items-start gap-3">
-                    <input
-                        ref={termsRef}
-                        type="checkbox"
-                        id="service-lead-terms"
-                        name="terms"
-                        className={`mt-1 h-4 w-4 rounded border-neutral-600 bg-neutral-800 text-green-500 focus:ring-green-500 focus:ring-offset-neutral-900 ${errors.terms ? "border-red-500 ring-2 ring-red-500" : ""}`}
-                    />
-                    <label htmlFor="service-lead-terms" className="text-sm text-neutral-400">
-                        Acepto los{" "}
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center">
+                        <input
+                            ref={termsRef}
+                            type="checkbox"
+                            id="service-lead-terms"
+                            name="terms"
+                            className={`h-4 w-4 rounded border-neutral-600 bg-neutral-800 text-green-500 focus:ring-green-500 focus:ring-offset-neutral-900 ${errors.terms ? "border-red-500 ring-2 ring-red-500" : ""}`}
+                        />
+                    </span>
+                    <label htmlFor="service-lead-terms" className="pt-2.5 text-sm text-white/80">
+                        {t.contact.termsBefore}{" "}
                         <a
                             href="/Politica_Proteccion_Datos_Colombia.pdf"
                             target="_blank"
+                            rel="noopener noreferrer"
                             className="text-green-400 underline hover:text-green-300"
                         >
-                            términos y condiciones
+                            {t.contact.termsLink}
                         </a>{" "}
-                        y la política de privacidad
+                        {t.contact.termsAfter}
                     </label>
                 </div>
-                {errors.terms && <p className="text-sm text-red-400">{errors.terms}</p>}
+                {errors.terms && (
+                    <p role="alert" className="text-sm text-red-400">
+                        {errors.terms}
+                    </p>
+                )}
 
                 {status === "error" && !Object.keys(errors).length && (
-                    <p className="text-sm text-red-400">{t.services.detailFormError}</p>
+                    <p role="alert" className="text-sm text-red-400">
+                        {t.services.detailFormError}
+                    </p>
                 )}
 
                 <motion.button
@@ -150,7 +159,7 @@ export function ServiceLeadForm({ slug }: ServiceLeadFormProps) {
                     disabled={isSubmitting}
                     whileHover={{ scale: isSubmitting ? 1 : 1.02 }}
                     whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                    className="w-full border border-white px-8 py-4 text-sm font-medium text-white transition-colors duration-300 hover:bg-white hover:text-[#1a1a1a] disabled:opacity-50"
+                    className="w-full border border-white px-8 py-4 text-sm font-medium text-white transition-colors duration-300 hover:bg-white hover:text-ink disabled:opacity-50"
                 >
                     {isSubmitting ? t.services.detailFormSending : t.services.detailFormSubmit}
                 </motion.button>

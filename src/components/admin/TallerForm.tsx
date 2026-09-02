@@ -244,7 +244,7 @@ export function TallerForm({ initialData, mode }: TallerFormProps) {
                 <button
                   type="button"
                   onClick={() => removeBlock(index)}
-                  className="h-6 w-6 border border-neutral-200 text-xs text-neutral-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-500"
+                  className="h-6 w-6 border border-neutral-200 text-xs text-red-800 transition-colors duration-200 hover:bg-red-50 hover:text-red-900"
                 >
                   ✕
                 </button>
@@ -341,7 +341,7 @@ export function TallerForm({ initialData, mode }: TallerFormProps) {
               <button
                 type="button"
                 onClick={() => removeImage(index)}
-                className="mt-2 h-6 w-6 border border-neutral-200 text-xs text-neutral-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-500"
+                className="mt-2 h-6 w-6 border border-neutral-200 text-xs text-red-800 transition-colors duration-200 hover:bg-red-50 hover:text-red-900"
               >
                 ✕
               </button>
