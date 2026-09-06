@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useRef, type ReactNode } from "react"
+import { ArrowUpRight } from "lucide-react"
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion"
 import { pickLocale } from "@/lib/i18n-field"
 import type { Service } from "@/lib/services"
@@ -67,11 +68,9 @@ export function ServiceTabs({ services, language, ctaLabel, heading }: ServiceTa
                 {heading}
             </div>
 
-            {/* El padding inferior es imprescindible: un `sticky` no puede salir de
-                su bloque contenedor, así que sin pista debajo las tarjetas dejan
-                de estar ancladas al llegar al final y se recortan todas a la
-                misma posición, que es justo lo que hacía desaparecer los tabs. */}
-            <ul ref={listRef} className="flex flex-col gap-6 pb-[55vh]">
+            {/* Pista corta: las fichas sticky se sueltan al llegar el FAQ,
+                sin dejar medio viewport vacío. */}
+            <ul ref={listRef} className="flex flex-col gap-6 pb-4">
                 {services.map((service, index) => {
                     const title = pickLocale(service.title, language)
                     const kicker = pickLocale(service.kicker, language)
@@ -96,40 +95,44 @@ export function ServiceTabs({ services, language, ctaLabel, heading }: ServiceTa
                                         event.preventDefault()
                                         revealService(index)
                                     }}
-                                    className="flex h-[72px] items-center justify-between gap-6 border-t border-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 md:h-[84px]"
+                                    className="flex h-[72px] items-center justify-between gap-6 border-t border-neutral-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink md:h-[84px]"
                                 >
                                     <span className="min-w-0">
-                                        <span className="block truncate text-lg uppercase tracking-[0.09em] text-neutral-900 lg:text-2xl">
+                                        <span className="block truncate text-lg uppercase tracking-[0.09em] text-ink lg:text-2xl">
                                             {title}
                                         </span>
                                         {kicker && (
-                                            <span className="mt-1 block truncate text-sm text-neutral-600">
+                                            <span className="mt-1 block truncate text-sm text-sage-ink">
                                                 {kicker}
                                             </span>
                                         )}
                                     </span>
-                                    <span aria-hidden className="shrink-0 text-neutral-500">
-                                        ↗
-                                    </span>
+                                    <ArrowUpRight
+                                        aria-hidden
+                                        strokeWidth={1.5}
+                                        className="size-5 shrink-0 text-sage-ink"
+                                    />
                                 </a>
 
                                 {/* A sangre en móvil, para que la imagen gane todo el ancho */}
                                 <div className="relative -mx-6 h-[280px] overflow-hidden sm:mx-0 md:h-[460px]">
-                                    {service.coverImage ? (
-                                        <MediaImage
-                                            src={service.coverImage}
-                                            alt={title}
-                                            sizes="(min-width: 1024px) 80vw, 100vw"
-                                        />
-                                    ) : (
-                                        <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
-                                    )}
+                                    <div className="service-cover-media absolute inset-0 origin-center">
+                                        {service.coverImage ? (
+                                            <MediaImage
+                                                src={service.coverImage}
+                                                alt={title}
+                                                sizes="(min-width: 1024px) 80vw, 100vw"
+                                            />
+                                        ) : (
+                                            <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="flex justify-end pb-6 pt-4">
                                     <Link
                                         href={`/servicios/${service.slug}`}
-                                        className="border-b border-neutral-400 pb-1 text-sm text-neutral-800 transition-colors duration-200 hover:border-neutral-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-neutral-900"
+                                        className="border-b border-neutral-400 pb-1 text-sm text-ink transition-colors duration-200 hover:border-ink focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ink"
                                     >
                                         {ctaLabel} →
                                     </Link>

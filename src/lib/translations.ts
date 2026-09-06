@@ -20,6 +20,9 @@ export const translations = {
         slogan: "Ningún sufrimiento es insignificante",
         about: {
             title: "Sobre mí",
+            title1: "Sobre",
+            title2: "mí",
+            passageTitles: ["La práctica", "Lo que irrumpe"],
             description:
                 "Soy psicólogo y psicoanalista, con especialización y maestría en Psicopatología y Salud Mental. Desde hace once años trabajo en el campo clínico con adultos, acompañando a quienes atraviesan distintos modos de sufrimiento subjetivo.\n\nMi práctica se orienta al trabajo con aquello que irrumpe y no encuentra palabras: el malestar persistente, las pérdidas, los duelos, las marcas del abuso sexual y otras experiencias que dejan huella en la vida psíquica. Trabajo desde el psicoanálisis, entendiendo que cada sujeto es singular y que no hay soluciones universales para lo que se sufre.",
         },
@@ -27,6 +30,7 @@ export const translations = {
             title: "Perfil",
             title1: "Mi",
             title2: "Perfil",
+            passageTitles: ["La enseñanza", "La clínica y la investigación", "Te escucho."],
             description:
                 "Actualmente soy profesor universitario y dirijo el área de proyección social en UNICOC (Colombia), espacios desde los cuales continúo interrogando la clínica, el sufrimiento y los discursos contemporáneos sobre la salud mental.\n\nHe desarrollado mi labor clínica tanto de manera presencial como online, atendiendo personas en distintos países de América y Europa. Paralelamente, he participado activamente en espacios académicos y de investigación: fui secretario del Departamento de Investigación de IUSAM–APdeBA hasta 2021, formé parte del consejo editorial de la Revista Argentina de Humanidades y Ciencias Sociales, y participé como revisor en publicaciones vinculadas a metodología de la investigación en Argentina.\n\nConcibo el espacio analítico como un lugar de escucha rigurosa y respetuosa, donde es posible hablar sin exigencias ni promesas de bienestar inmediato, y donde cada proceso se construye a su propio tiempo.\n\nTe escucho.",
         },
@@ -73,7 +77,7 @@ export const translations = {
             ],
         },
         contact: {
-            title: "Dejame un mensaje",
+            title: "Déjame un mensaje",
             name: "¿Cuál es tu nombre?",
             namePlaceholder: "Tu nombre",
             email: "¿Cuál es tu correo?",
@@ -221,6 +225,7 @@ export const translations = {
             title: "About me",
             title1: "About",
             title2: "me",
+            passageTitles: ["The practice", "What irrupts"],
             description:
                 "I am a psychologist and psychoanalyst, with postgraduate training and a master's degree in Psychopathology and Mental Health. For over eleven years, I have worked in the clinical field with adults, accompanying those who experience different forms of subjective suffering.\n\nMy practice is oriented toward what irrupts and does not easily find words: persistent distress, loss, mourning, the marks left by sexual abuse, and other experiences that leave traces in psychic life. I work from a psychoanalytic perspective, understanding that each subject is singular and that there are no universal solutions to suffering.",
         },
@@ -228,6 +233,7 @@ export const translations = {
             title: "Profile",
             title1: "My",
             title2: "Profile",
+            passageTitles: ["Teaching", "Clinic and research", "I listen."],
             description:
                 "I am currently a university professor and Director of Social Outreach at UNICOC (Colombia), spaces from which I continue to question clinical practice, suffering, and contemporary discourses on mental health.\n\nI have developed my clinical work both in person and online, working with people in different countries across the Americas and Europe. In parallel, I have actively participated in academic and research spaces: I served as Secretary of the Research Department at IUSAM–APdeBA until 2021, was a member of the editorial board of the Revista Argentina de Humanidades y Ciencias Sociales and participated as a reviewer in publications on research methodology in Argentina.\n\nI conceive the analytic space as a place of rigorous and respectful listening, where it is possible to speak without demands or promises of immediate well-being, and where each process unfolds in its own time.\n\nI listen.",
         },
@@ -421,6 +427,7 @@ export const translations = {
             title: "À propos de moi",
             title1: "À propos",
             title2: "de moi",
+            passageTitles: ["La pratique", "Ce qui fait irruption"],
             description:
                 "Je suis psychologue et psychanalyste, titulaire d'une spécialisation et d'un master en psychopathologie et santé mentale. Depuis plus de onze ans, je travaille dans le champ clinique avec des adultes, en accompagnant des personnes confrontées à différentes formes de souffrance subjective.\n\nMa pratique s'oriente vers ce qui fait irruption et ne trouve pas facilement de mots : le malaise persistant, les pertes, les deuils, les marques laissées par les abus sexuels et d'autres expériences qui laissent une trace dans la vie psychique. Je travaille à partir de la psychanalyse, en considérant que chaque sujet est singulier et qu'il n'existe pas de solutions universelles à la souffrance.",
         },
@@ -428,6 +435,7 @@ export const translations = {
             title: "Profil",
             title1: "Mon",
             title2: "Profil",
+            passageTitles: ["L'enseignement", "Clinique et recherche", "Je vous écoute."],
             description:
                 "Je suis actuellement professeur universitaire et directeur de l'aire de projection sociale à l'UNICOC (Colombie), espaces à partir desquels je poursuis l'interrogation de la clinique, de la souffrance et des discours contemporains sur la santé mentale.\n\nJ'ai développé mon activité clinique en présentiel et en ligne, en accompagnant des personnes dans différents pays d'Amérique et d'Europe. Parallèlement, j'ai participé activement à des espaces académiques et de recherche : j'ai été secrétaire du Département de recherche de l'IUSAM–APdeBA jusqu'en 2021, membre du comité éditorial de la Revista Argentina de Humanidades y Ciencias Sociales, et relecteur pour des publications en méthodologie de la recherche en Argentine.\n\nJe conçois l'espace analytique comme un lieu d'écoute rigoureuse et respectueuse, où il est possible de parler sans exigences ni promesses de bien-être immédiat, et où chaque processus se construit à son propre rythme.\n\nJe vous écoute.",
         },

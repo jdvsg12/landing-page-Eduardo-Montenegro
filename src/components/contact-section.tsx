@@ -1,7 +1,6 @@
 "use client"
 
-import { useRef, useState } from "react"
-import { motion } from "motion/react"
+import { useState } from "react"
 import { z } from "zod"
 import { AnimatedInput } from "@/components/ui/animated-input"
 import { useLanguage } from "@/lib/language-context"
@@ -11,8 +10,7 @@ import { socialLinks } from "@/lib/social-links"
 import { createContactFormSchema, formatZodErrors } from "@/lib/validation"
 
 export function ContactSection() {
-    const sectionRef = useRef<HTMLDivElement>(null)
-    const termsRef = useRef<HTMLInputElement>(null)
+    const [termsAccepted, setTermsAccepted] = useState(false)
     const { language } = useLanguage()
     const t = getTranslation(language)
 
@@ -33,7 +31,7 @@ export function ContactSection() {
             phone: formData.get("phone") as string,
             services: formData.get("services") as string,
             message: formData.get("message") as string,
-            terms: termsRef.current?.checked || false,
+            terms: termsAccepted,
             language: language,
         }
 
@@ -66,6 +64,7 @@ export function ContactSection() {
             setSubmitStatus("success")
             const form = e.target as HTMLFormElement
             form?.reset()
+            setTermsAccepted(false)
         } catch (error) {
             console.error("Error:", error)
             setSubmitStatus("error")
@@ -76,15 +75,14 @@ export function ContactSection() {
 
     return (
         <section
-            ref={sectionRef}
             id="contact"
-            className="relative min-h-screen bg-ink"
+            className="relative scroll-mt-20 min-h-screen bg-ink"
         >
             <div className="flex min-h-screen items-center py-24 lg:py-32">
                 <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-16 lg:grid-cols-2">
                         <div>
-                            <h2 className="mb-12 font-serif text-3xl font-light text-white lg:text-4xl">
+                            <h2 className="mb-12 font-serif text-3xl font-light italic text-white lg:text-4xl">
                                 {t.contact.title}
                             </h2>
 
@@ -92,7 +90,7 @@ export function ContactSection() {
                                 {Object.keys(validationErrors).length > 0 && (
                                     <div
                                         role="alert"
-                                        className="rounded border border-red-500 bg-red-500/10 p-4 text-red-400"
+                                        className="border border-red-400/80 bg-red-500/10 p-4 text-red-300"
                                     >
                                         <p className="mb-2 font-medium">{t.contact.validation.formTitle}</p>
                                         <ul className="list-inside list-disc space-y-1 text-sm">
@@ -124,7 +122,7 @@ export function ContactSection() {
                                 <div className="grid gap-8 md:grid-cols-2">
                                     <AnimatedInput
                                         label={t.contact.phone}
-                                        placeholder="+57 300 123 4567"
+                                        placeholder={t.contact.phonePlaceholder}
                                         name="phone"
                                         type="tel"
                                         required
@@ -158,11 +156,12 @@ export function ContactSection() {
                                 <div className="flex items-start gap-3">
                                     <span className="flex h-11 w-11 shrink-0 items-center justify-center">
                                         <input
-                                            ref={termsRef}
                                             type="checkbox"
                                             id="terms"
                                             name="terms"
-                                            className={`h-4 w-4 rounded border-neutral-600 bg-neutral-800 text-green-500 focus:ring-green-500 focus:ring-offset-neutral-900 ${validationErrors.terms ? "border-red-500 ring-2 ring-red-500" : ""}`}
+                                            checked={termsAccepted}
+                                            onChange={(event) => setTermsAccepted(event.target.checked)}
+                                            className={`h-4 w-4 cursor-pointer rounded-sm border-white/40 bg-ink accent-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${validationErrors.terms ? "outline-2 outline-red-400" : ""}`}
                                         />
                                     </span>
                                     <label htmlFor="terms" className="pt-2.5 text-sm text-white/80">
@@ -171,7 +170,7 @@ export function ContactSection() {
                                             href="/Politica_Proteccion_Datos_Colombia.pdf"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-green-400 underline hover:text-green-300"
+                                            className="text-white underline underline-offset-4 hover:text-white"
                                         >
                                             {t.contact.termsLink}
                                         </a>{" "}
@@ -185,30 +184,24 @@ export function ContactSection() {
                                 )}
 
                                 {submitStatus === "success" && (
-                                    <p role="status" className="rounded border border-green-500 bg-green-500/10 p-4 text-green-400">
+                                    <p role="status" className="border border-white/30 bg-white/5 p-4 text-white">
                                         {t.contact.success}
                                     </p>
                                 )}
 
                                 {submitStatus === "error" && (
-                                    <p role="alert" className="rounded border border-red-500 bg-red-500/10 p-4 text-red-400">
+                                    <p role="alert" className="border border-red-400/80 bg-red-500/10 p-4 text-red-300">
                                         {t.contact.error}
                                     </p>
                                 )}
 
-                                <motion.button
+                                <button
                                     type="submit"
                                     disabled={isSubmitting}
-                                    whileHover={{
-                                        scale: isSubmitting ? 1 : 1.02,
-                                        backgroundColor: isSubmitting ? "transparent" : "#ffffff",
-                                        color: isSubmitting ? "#ffffff" : "#1a1a1a",
-                                    }}
-                                    whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                                    className="mt-8 w-full border border-white bg-transparent py-4 text-center text-white transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="mt-8 w-full min-h-12 border border-white bg-transparent py-4 text-center text-white transition-colors duration-200 hover:bg-white hover:text-ink disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     {isSubmitting ? t.contact.sending : t.contact.send}
-                                </motion.button>
+                                </button>
                             </form>
                         </div>
 
@@ -227,7 +220,7 @@ export function ContactSection() {
                                             href="https://wa.me/573142793431"
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-white/80 underline-offset-4 hover:text-white hover:underline"
+                                            className="text-white/80 underline-offset-4 hover:text-[#25D366] hover:underline"
                                         >
                                             {t.contact.whatsappLabel}: +57 314 279 3431
                                         </a>
@@ -242,7 +235,7 @@ export function ContactSection() {
                                             href={link.href}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="block text-white/80 transition-colors hover:text-white"
+                                            className="block min-h-11 text-white/80 transition-colors hover:text-white"
                                         >
                                             {link.label}
                                         </a>

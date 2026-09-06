@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
@@ -17,7 +17,6 @@ const languages: { code: Language; label: string }[] = [
 const SCROLL_THRESHOLD = 50
 const HERO_OFFSET = 100
 const CONTACT_OFFSET = 100
-const SERVICES_OFFSET = 100
 
 interface NavbarProps {
     /**
@@ -69,23 +68,20 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
 
         const handleScroll = () => {
             const scrollY = window.scrollY
-            const heroHeight = window.innerHeight
+            const navBand = 80
 
             setIsScrolled(scrollY > SCROLL_THRESHOLD)
-            setIsInHero(scrollY < heroHeight - HERO_OFFSET)
+            setIsInHero(scrollY < window.innerHeight - HERO_OFFSET)
 
             const servicesSection = document.getElementById("services")
             if (servicesSection) {
-                const servicesTop = servicesSection.offsetTop
-                const servicesBottom = servicesTop + servicesSection.offsetHeight
-                const isInServicesRange = scrollY >= servicesTop - 200 && scrollY < servicesBottom - 200
-                setIsInServices(isInServicesRange)
+                const rect = servicesSection.getBoundingClientRect()
+                setIsInServices(rect.top <= navBand && rect.bottom > navBand)
             }
 
             const contactSection = document.getElementById("contact")
             if (contactSection) {
-                const rect = contactSection.getBoundingClientRect()
-                setIsInContact(rect.top <= CONTACT_OFFSET)
+                setIsInContact(contactSection.getBoundingClientRect().top <= CONTACT_OFFSET)
             }
         }
 
@@ -128,15 +124,15 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
         setIsLangMenuOpen(false)
     }
 
-    const isDarkSection = !isPage && (isInHero || isInContact) && !isInServices
-    const textColorClass = isDarkSection ? "text-white" : "text-foreground"
+    const isDarkSection = !isPage && (isInHero || isInContact || isInServices)
+    const textColorClass = isDarkSection ? "text-white" : "text-ink"
 
     const navbarBgClass = isPage
         ? "bg-paper/85 backdrop-blur-sm"
         : isInContact
         ? "bg-ink"
         : isInServices
-            ? "bg-surface"
+            ? "bg-sage-deep"
             : isScrolled && !isInHero
                 ? "bg-paper"
                 : "bg-transparent"
@@ -167,7 +163,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
                         setIsLangMenuOpen={setIsLangMenuOpen}
                         language={language}
                         onLanguageChange={handleLanguageChange}
-                        isInContact={isInContact}
+                        isInContact={isInContact || isInServices}
                         languageLabel={t.nav.language}
                     />
                     <MobileMenuButton
@@ -287,19 +283,24 @@ function LanguageSelector({
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, y: -8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className={`absolute right-0 top-full mt-2 rounded-md py-2 backdrop-blur-md ${isInContact ? "bg-white/10" : "bg-white shadow-lg"
-                            }`}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.15 }}
+                        role="listbox"
+                        aria-label={languageLabel}
+                        className={`absolute right-0 top-full mt-2 min-w-28 py-1 ${isInContact ? "bg-ink" : "bg-paper"}`}
                     >
                         {languages.map((lang) => (
                             <button
                                 key={lang.code}
+                                type="button"
+                                role="option"
+                                aria-selected={language === lang.code}
                                 onClick={() => onLanguageChange(lang.code)}
-                                className={`block w-full px-4 py-2 text-left text-sm transition-colors ${isInContact
-                                    ? `hover:bg-white/10 ${language === lang.code ? "font-semibold text-white" : "text-neutral-300"}`
-                                    : `hover:bg-neutral-100 ${language === lang.code ? "font-semibold text-neutral-900" : "text-neutral-600"}`
+                                className={`block min-h-11 w-full px-4 py-2 text-left text-sm transition-colors ${isInContact
+                                    ? `hover:bg-white/10 ${language === lang.code ? "font-semibold text-white" : "text-white/80"}`
+                                    : `hover:bg-surface ${language === lang.code ? "font-semibold text-ink" : "text-sage-ink"}`
                                     }`}
                             >
                                 {lang.label}
@@ -352,8 +353,6 @@ const MobileMenuButton = React.forwardRef<HTMLButtonElement, MobileMenuButtonPro
 )
 
 MobileMenuButton.displayName = "MobileMenuButton"
-
-import React from "react"
 
 interface MobileMenuProps {
     isOpen: boolean

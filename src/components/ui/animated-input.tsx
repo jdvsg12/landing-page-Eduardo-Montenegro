@@ -38,7 +38,7 @@ export function AnimatedInput({
     }
 
     const inputClasses =
-        "w-full bg-transparent border-0 border-b px-0 py-3 text-white placeholder:text-white/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-ink transition-colors duration-300" +
+        "w-full caret-white bg-transparent border-0 border-b px-0 py-3 text-white placeholder:text-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-ink transition-colors duration-300" +
         (error ? " border-red-500" : " border-neutral-600 focus:border-white")
 
     return (

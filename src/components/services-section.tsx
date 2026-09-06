@@ -1,7 +1,6 @@
 "use client"
 
-import { ServiceTabs } from "@/components/services/service-tabs"
-import { TallerCard } from "@/components/ui/taller-card"
+import { ServiceCards } from "@/components/services/service-cards"
 import { useLanguage } from "@/lib/language-context"
 import { getTranslation } from "@/lib/translations"
 import type { Service } from "@/lib/services"
@@ -18,51 +17,31 @@ export function ServicesSection({
 }) {
     const { language } = useLanguage()
     const t = getTranslation(language)
-    const hasTalleres = talleres.length > 0
 
     return (
-        <section
-            id="services"
-            className="relative bg-surface px-6 pb-28 pt-6 lg:px-8"
-        >
-            <div className="mx-auto w-full max-w-7xl">
-                <ServiceTabs
-                    services={services}
-                    language={language}
-                    ctaLabel={t.services.viewService}
-                    heading={
-                        <h2 className="font-serif text-5xl font-light italic text-neutral-900 md:text-7xl">
-                            {t.services.title}
-                        </h2>
-                    }
-                />
+        <section id="services" className="relative scroll-mt-20 bg-sage-deep">
+            <ServiceCards
+                services={services}
+                talleres={talleres}
+                language={language}
+                ctaLabel={t.services.viewService}
+                heading={t.services.title}
+                talleresHeading={t.talleres.title}
+            />
 
-                {loadError && (
-                    <p role="status" className="mt-8 max-w-xl text-neutral-800">
-                        {t.services.loadError}
-                    </p>
-                )}
+            {(loadError || services.length === 0) && (
+                <div className="relative px-6 pb-16 lg:px-10">
+                    {loadError && (
+                        <p role="status" className="max-w-xl text-white/80">
+                            {t.services.loadError}
+                        </p>
+                    )}
 
-                {!loadError && services.length === 0 && (
-                    <p className="mt-8 max-w-xl text-neutral-800">{t.services.empty}</p>
-                )}
-
-                {hasTalleres && (
-                    <>
-                        <div className="mt-32 border-t border-neutral-400 pt-16" />
-
-                        <h3 className="mb-12 font-serif text-3xl font-light italic text-neutral-900">
-                            {t.talleres.title}
-                        </h3>
-
-                        <div className="grid gap-8 md:grid-cols-3">
-                            {talleres.map((taller) => (
-                                <TallerCard key={taller.id} taller={taller} />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
+                    {!loadError && services.length === 0 && (
+                        <p className="max-w-xl text-white/80">{t.services.empty}</p>
+                    )}
+                </div>
+            )}
         </section>
     )
 }

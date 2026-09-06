@@ -23,28 +23,28 @@ export function TallerCard({ taller }: TallerCardProps) {
 
   return (
     <div className="h-full border-t-2 border-neutral-400 pt-6">
-      <span className="mb-3 inline-block border border-neutral-400 px-3 py-1 text-xs font-medium text-neutral-800">
+      <span className="mb-3 inline-block border border-neutral-400 px-3 py-1 text-xs font-medium text-ink">
         {t.talleres.badge}
       </span>
 
-      <h3 className="mb-3 text-xl font-semibold text-neutral-900">
+      <h3 className="mb-3 text-xl font-semibold text-ink">
         {taller.title}
       </h3>
 
-      <div className="mb-3 flex gap-3 text-sm text-neutral-800">
-        <span>{formatDate(taller.date)}</span>
+      <div className="mb-3 flex gap-3 text-sm text-sage-ink">
+        <span suppressHydrationWarning>{formatDate(taller.date)}</span>
         <span>{taller.cost}</span>
       </div>
 
-      <p className="mb-4 line-clamp-4 text-sm leading-relaxed text-neutral-700">
+      <p className="mb-4 line-clamp-4 text-sm leading-relaxed text-sage-ink">
         {taller.excerpt}
       </p>
 
       <a
         href={`/talleres/${taller.slug}`}
-        className="inline-block min-h-11 text-sm font-medium text-neutral-800 transition-colors duration-200 hover:text-neutral-900"
+        className="inline-block min-h-11 text-sm font-medium text-ink transition-colors duration-200 hover:text-ink"
       >
-        <span className="border-b border-neutral-400 pb-0.5 transition-all duration-200 hover:border-neutral-900">
+        <span className="border-b border-neutral-400 pb-0.5 transition-all duration-200 hover:border-ink">
           {t.talleres.viewTaller} →
         </span>
       </a>

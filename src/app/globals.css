@@ -146,10 +146,18 @@
   }
   body {
     @apply bg-paper text-foreground;
+    caret-color: var(--ink);
+  }
+  :focus-visible {
+    outline-color: var(--sage-deep);
   }
   ::selection {
     background: color-mix(in oklab, var(--sage) 45%, transparent);
     color: var(--ink);
+  }
+  #contact,
+  footer {
+    caret-color: white;
   }
 }
 
@@ -166,8 +174,29 @@
   animation: clip-reveal-up 0.75s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
 }
 
+@keyframes cover-settle {
+  from {
+    transform: scale(1.12);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  .service-cover-media {
+    animation: cover-settle linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .clip-reveal-hero {
+    animation: none;
+  }
+
+  .service-cover-media {
     animation: none;
   }
 }
@@ -189,4 +218,12 @@
 .thin-scrollbar::-webkit-scrollbar-thumb {
   background-color: oklch(0.85 0 0);
   border-radius: 2px;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
