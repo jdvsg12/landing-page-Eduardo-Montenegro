@@ -50,8 +50,8 @@ export function AboutSection() {
     return (
         <section id="about" className="relative scroll-mt-20 bg-paper">
             <div className="lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                <aside className="flex flex-col justify-center border-b border-sage/30 px-6 py-16 sm:px-10 lg:sticky lg:top-0 lg:h-svh lg:border-b-0 lg:border-r lg:px-16 xl:px-24">
-                    <h2 className="max-w-[8ch] font-serif text-[clamp(3.75rem,10vw,7.5rem)] font-light italic leading-[0.9] text-sage-ink">
+                <aside className="flex flex-col justify-center border-b border-sage/30 px-6 py-12 sm:px-10 sm:py-16 lg:sticky lg:top-0 lg:h-svh lg:border-b-0 lg:border-r lg:px-16 xl:px-24">
+                    <h2 className="max-w-[8ch] font-serif text-[clamp(2.75rem,16vw,7.5rem)] font-light italic leading-[0.9] text-sage-ink">
                         {t.about.title}
                     </h2>
                 </aside>
@@ -60,7 +60,7 @@ export function AboutSection() {
                     {screens.map((blocks, screenIndex) => (
                         <article
                             key={blocks[0]?.title || screenIndex}
-                            className={`flex flex-col justify-center px-6 py-20 sm:px-10 lg:min-h-svh lg:px-16 xl:px-24 ${
+                            className={`flex flex-col justify-center px-6 py-14 sm:px-10 sm:py-20 lg:min-h-svh lg:px-16 xl:px-24 ${
                                 screenIndex < screens.length - 1 ? "border-b border-sage/30" : ""
                             }`}
                         >

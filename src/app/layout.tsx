@@ -1,5 +1,5 @@
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { cookies } from "next/headers"
 import { Analytics } from "@vercel/analytics/next"
@@ -17,6 +17,12 @@ const geistMono = Geist_Mono({
     subsets: ["latin"],
     variable: "--font-geist-mono",
 })
+
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    viewportFit: "cover",
+}
 
 export const metadata: Metadata = {
     title: "Eduardo Montenegro Flórez | Psicólogo y Psicoanalista",

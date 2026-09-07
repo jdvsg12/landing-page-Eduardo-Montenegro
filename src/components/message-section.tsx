@@ -48,7 +48,7 @@ function FillSlogan({ words, accent }: { words: string[]; accent: string }) {
     })
 
     return (
-        <div ref={ref} className="relative h-[165vh]">
+        <div ref={ref} className="relative h-[140svh] lg:h-[165svh]">
             <div className="sticky top-0 flex h-svh items-center justify-center overflow-hidden px-6">
                 <FillField />
                 <SloganHeadline words={words} accent={accent} progress={scrollYProgress} />
@@ -70,7 +70,7 @@ function SloganHeadline({
     let charIndex = 0
 
     return (
-        <h2 className="relative max-w-[16ch] text-center font-serif text-[clamp(2.35rem,8vw,6.75rem)] font-light italic leading-[0.95] tracking-[-0.03em] text-ink">
+        <h2 className="relative max-w-[16ch] px-1 text-center font-serif text-[clamp(2.1rem,11vw,6.75rem)] font-light italic leading-[0.95] tracking-[-0.03em] text-ink">
             {words.map((word, wordIndex) => {
                 const isAccent = wordKey(word) === accent
                 const letters = Array.from(word)
@@ -141,7 +141,7 @@ function FillField() {
     return (
         <svg
             aria-hidden
-            className="pointer-events-none absolute -right-16 -top-24 h-[70%] w-[55%] text-sage/25 lg:-right-8 lg:-top-16"
+            className="pointer-events-none absolute -top-24 right-0 h-[70%] w-[55%] max-w-[min(55%,20rem)] text-sage/25 lg:-top-16"
             viewBox="0 0 640 640"
             fill="none"
         >

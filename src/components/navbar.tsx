@@ -105,6 +105,16 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
     }, [isMobileMenuOpen])
 
     useEffect(() => {
+        const media = window.matchMedia("(min-width: 1024px)")
+        const closeOnDesktop = () => {
+            if (media.matches) setIsMobileMenuOpen(false)
+        }
+        closeOnDesktop()
+        media.addEventListener("change", closeOnDesktop)
+        return () => media.removeEventListener("change", closeOnDesktop)
+    }, [])
+
+    useEffect(() => {
         const onKey = (event: KeyboardEvent) => {
             if (event.key !== "Escape") return
             setIsLangMenuOpen(false)
@@ -154,7 +164,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
             <header
                 className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${navbarBgClass}`}
             >
-                <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+                <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:px-8">
                     <Logo textColor={textColorClass} href={isPage ? "/" : "#"} />
                     <DesktopNav
                         navLinks={navLinks}
@@ -195,7 +205,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
 function Logo({ textColor, href = "#" }: { textColor: string; href?: string }) {
     return (
         <a href={href} className={`transition-colors duration-300 ${textColor}`}>
-            <span className="text-lg lg:text-xl font-semibold">Eduardo Montenegro</span>
+            <span className="text-[1.05rem] font-semibold sm:text-lg lg:text-xl">Eduardo Montenegro</span>
         </a>
     )
 }
@@ -222,7 +232,7 @@ function DesktopNav({
     languageLabel,
 }: DesktopNavProps) {
     return (
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-8 lg:flex">
             <ul className="flex items-center gap-8">
                 {navLinks.map((link) => (
                     <li key={link.name}>
@@ -331,7 +341,7 @@ const MobileMenuButton = React.forwardRef<HTMLButtonElement, MobileMenuButtonPro
                 onClick={onClick}
                 aria-expanded={isOpen}
                 aria-label={isOpen ? closeLabel : openLabel}
-                className={`relative z-[60] flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 md:hidden ${bgClass}`}
+                className={`relative z-[60] flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 lg:hidden ${bgClass}`}
             >
                 <div className="flex flex-col items-center justify-center gap-1.5">
                     <motion.span
@@ -397,7 +407,7 @@ function MobileMenu({
                             : { clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }
                     }
                     transition={{ duration: reduceMotion ? 0.2 : 0.5, ease: [0.16, 1, 0.3, 1] }}
-                    className="fixed inset-0 z-[55] bg-ink md:hidden"
+                    className="fixed inset-0 z-[55] bg-ink lg:hidden"
                 >
                     <button
                         type="button"

@@ -199,6 +199,27 @@
   .service-cover-media {
     animation: none;
   }
+
+  .consultorio-marquee {
+    animation: none;
+  }
+}
+
+@keyframes consultorio-marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.consultorio-marquee-mask {
+  overflow: hidden;
+}
+
+.consultorio-marquee {
+  display: flex;
+  width: max-content;
+  animation: consultorio-marquee 32s linear infinite;
+  will-change: transform;
 }
 
 /* Thin scrollbar */

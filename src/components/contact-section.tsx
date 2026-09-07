@@ -76,9 +76,9 @@ export function ContactSection() {
     return (
         <section
             id="contact"
-            className="relative scroll-mt-20 min-h-screen bg-ink"
+            className="relative scroll-mt-20 min-h-svh bg-ink"
         >
-            <div className="flex min-h-screen items-center py-24 lg:py-32">
+            <div className="flex min-h-svh items-center py-24 lg:py-32">
                 <div className="mx-auto w-full max-w-7xl px-6 lg:px-8">
                     <div className="grid gap-16 lg:grid-cols-2">
                         <div>
@@ -101,7 +101,7 @@ export function ContactSection() {
                                     </div>
                                 )}
 
-                                <div className="grid gap-8 md:grid-cols-2">
+                                <div className="grid gap-8 md:grid-cols-2 md:[&>*]:min-w-0">
                                     <AnimatedInput
                                         label={t.contact.name}
                                         placeholder={t.contact.namePlaceholder}
@@ -119,7 +119,7 @@ export function ContactSection() {
                                     />
                                 </div>
 
-                                <div className="grid gap-8 md:grid-cols-2">
+                                <div className="grid gap-8 md:grid-cols-2 md:[&>*]:min-w-0">
                                     <AnimatedInput
                                         label={t.contact.phone}
                                         placeholder={t.contact.phonePlaceholder}

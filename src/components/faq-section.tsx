@@ -49,7 +49,7 @@ function CategoryTab({
             type="button"
             onClick={onClick}
             aria-pressed={isActive}
-            className={`relative min-h-11 cursor-pointer px-6 py-3 text-left text-lg font-medium transition-colors lg:text-xl ${isActive
+            className={`relative min-h-11 shrink-0 cursor-pointer px-4 py-3 text-left text-base font-medium transition-colors sm:px-6 lg:text-xl ${isActive
                 ? "text-ink"
                 : "text-sage-ink hover:text-ink"
                 }`}
@@ -86,7 +86,7 @@ export function FaqSection() {
                     {faqContent.title}
                 </h2>
 
-                <div className="mb-12 flex flex-wrap justify-between gap-2 border-b border-ink/15">
+                <div className="mb-12 flex gap-1 overflow-x-auto border-b border-ink/15 pb-px [-ms-overflow-style:none] [scrollbar-width:none] lg:justify-between lg:overflow-visible [&::-webkit-scrollbar]:hidden">
                     {faqContent.categories.map((category, index) => (
                         <CategoryTab
                             key={category.name}

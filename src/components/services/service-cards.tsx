@@ -13,7 +13,9 @@ import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion"
 
 const VISIBLE_CARDS = 3
 const GAP = 24
-const COVER_CLASS = "relative h-[21rem] overflow-hidden bg-sage lg:h-[24rem]"
+const COVER_CLASS = "relative h-[16.5rem] overflow-hidden bg-sage sm:h-[18rem] lg:h-[24rem]"
+const CARD_IMAGE_SIZES = "(min-width: 1024px) 22vw, (min-width: 768px) 45vw, 90vw"
+const EASE_CONSULTORIO: [number, number, number, number] = [0.16, 1, 0.3, 1]
 
 export function ServiceCards({
     services,
@@ -48,6 +50,7 @@ export function ServiceCards({
                 language={language}
                 heading={heading}
                 talleresHeading={talleresHeading}
+                reduceMotion={reduceMotion}
             />
         )
     }
@@ -69,58 +72,88 @@ function StackedCatalog({
     language,
     heading,
     talleresHeading,
+    reduceMotion,
 }: {
     services: Service[]
     talleres: Taller[]
     language: Language
     heading: string
     talleresHeading: string
+    reduceMotion: boolean
 }) {
     return (
-        <div className="px-6 py-20 lg:px-10">
+        <div className="relative overflow-x-clip px-6 py-16 sm:py-20 lg:px-10">
+            <div className="pointer-events-none absolute inset-0 opacity-80">
+                <OrbitalField />
+            </div>
+
             {services.length > 0 ? (
-                <>
-                    <h2 className="font-serif text-5xl font-light italic text-white md:text-7xl">{heading}</h2>
-                    <StackedRow count={services.length}>
-                        {services.map((service, index) => (
-                            <li key={service.id} className="w-[min(86vw,22rem)] shrink-0">
-                                <ServicePinCard service={service} language={language} index={index} />
-                            </li>
-                        ))}
-                    </StackedRow>
-                </>
+                <StackedBlock title={heading} heading="h2">
+                    {services.map((service, index) => (
+                        <StackedItem key={service.id} index={index} reduceMotion={reduceMotion}>
+                            <ServicePinCard service={service} language={language} index={index} />
+                        </StackedItem>
+                    ))}
+                </StackedBlock>
             ) : null}
 
             {talleres.length > 0 ? (
-                <>
-                    <h3
-                        className={`font-serif text-4xl font-light italic text-white md:text-6xl ${
-                            services.length > 0 ? "mt-20" : ""
-                        }`}
-                    >
-                        {talleresHeading}
-                    </h3>
-                    <StackedRow count={talleres.length}>
-                        {talleres.map((taller) => (
-                            <li key={taller.id} className="w-[min(86vw,22rem)] shrink-0">
-                                <TallerPinCard taller={taller} language={language} />
-                            </li>
-                        ))}
-                    </StackedRow>
-                </>
+                <StackedBlock title={talleresHeading} heading="h3" spaced={services.length > 0}>
+                    {talleres.map((taller, index) => (
+                        <StackedItem key={taller.id} index={index} reduceMotion={reduceMotion}>
+                            <TallerPinCard taller={taller} language={language} />
+                        </StackedItem>
+                    ))}
+                </StackedBlock>
             ) : null}
         </div>
     )
 }
 
-function StackedRow({ count, children }: { count: number; children: ReactNode }) {
-    const overflow = count > VISIBLE_CARDS
-    const centered = count <= VISIBLE_CARDS
+function StackedBlock({
+    title,
+    heading: Heading,
+    spaced,
+    children,
+}: {
+    title: string
+    heading: "h2" | "h3"
+    spaced?: boolean
+    children: ReactNode
+}) {
+    return (
+        <div className={`relative ${spaced ? "mt-16 sm:mt-20" : ""}`}>
+            <Heading className="max-w-[12ch] font-serif text-[clamp(2.75rem,14vw,4.5rem)] font-light italic leading-[0.95] text-white">
+                {title}
+            </Heading>
+            <ul className="mt-8 grid grid-cols-1 gap-5 sm:mt-10 sm:gap-6 lg:grid-cols-2">{children}</ul>
+        </div>
+    )
+}
+
+function StackedItem({
+    index,
+    reduceMotion,
+    children,
+}: {
+    index: number
+    reduceMotion: boolean
+    children: ReactNode
+}) {
+    if (reduceMotion) {
+        return <li className="min-w-0">{children}</li>
+    }
 
     return (
-        <ul className={`mt-10 flex gap-6 pb-2 ${overflow ? "overflow-x-auto" : centered ? "justify-center" : ""}`}>
+        <motion.li
+            className="min-w-0"
+            initial={{ opacity: 0, y: 28 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.7, delay: Math.min(index, 2) * 0.08, ease: EASE_CONSULTORIO }}
+        >
             {children}
-        </ul>
+        </motion.li>
     )
 }
 
@@ -334,7 +367,7 @@ function ServicePinCard({
                         progress ? (
                             <ParallaxCover src={service.coverImage} alt={title} index={index} progress={progress} />
                         ) : (
-                            <MediaImage src={service.coverImage} alt={title} sizes="22vw" />
+                            <MediaImage src={service.coverImage} alt={title} sizes={CARD_IMAGE_SIZES} />
                         )
                     ) : (
                         <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
@@ -360,7 +393,7 @@ function TallerPinCard({ taller, language }: { taller: Taller; language: Languag
             <article className="flex h-full flex-col bg-paper p-5 text-ink">
                 <div className={COVER_CLASS}>
                     {taller.coverImage ? (
-                        <MediaImage src={taller.coverImage} alt={taller.title} sizes="22vw" />
+                        <MediaImage src={taller.coverImage} alt={taller.title} sizes={CARD_IMAGE_SIZES} />
                     ) : (
                         <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
                     )}
@@ -397,7 +430,7 @@ function useDesktopPin() {
     const [desktop, setDesktop] = useState(false)
 
     useEffect(() => {
-        const media = window.matchMedia("(min-width: 1024px)")
+        const media = window.matchMedia("(min-width: 1280px) and (min-height: 860px)")
         const update = () => setDesktop(media.matches)
         update()
         media.addEventListener("change", update)
@@ -422,7 +455,7 @@ function ParallaxCover({
 
     return (
         <motion.div className="absolute inset-0" style={{ x }}>
-            <MediaImage src={src} alt={alt} className="scale-110" sizes="22vw" />
+            <MediaImage src={src} alt={alt} className="scale-110" sizes={CARD_IMAGE_SIZES} />
         </motion.div>
     )
 }
