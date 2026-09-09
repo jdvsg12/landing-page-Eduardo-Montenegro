@@ -448,8 +448,8 @@ function MobileMenu({
                         <div className="flex flex-col gap-8">
                             <div>
                                 <h4 className="mb-4 text-sm font-medium uppercase tracking-wider text-neutral-500">{t.nav.contact}</h4>
-                                <a href="mailto:formacion@eduardomontenegro.com" className="mb-2 block text-sm text-white hover:text-neutral-400">
-                                    formacion@eduardomontenegro.com
+                                <a href="mailto:Contacto@eduardomontenegro.com" className="mb-2 block text-sm text-white hover:text-neutral-400">
+                                    Contacto@eduardomontenegro.com
                                 </a>
                                 <a href="tel:+573142793431" className="block text-sm text-white hover:text-neutral-400">
                                     +57 314 279 3431
