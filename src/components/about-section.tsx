@@ -2,6 +2,7 @@
 
 import { useLanguage } from "@/lib/language-context"
 import { getTranslation } from "@/lib/translations"
+import { SectionHeading } from "@/components/section-heading"
 
 type Block = {
     title: string
@@ -50,10 +51,8 @@ export function AboutSection() {
     return (
         <section id="about" className="relative scroll-mt-20 bg-paper">
             <div className="lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                <aside className="flex flex-col justify-center border-b border-sage/30 px-6 py-12 sm:px-10 sm:py-16 lg:sticky lg:top-0 lg:h-svh lg:border-b-0 lg:border-r lg:px-16 xl:px-24">
-                    <h2 className="max-w-[8ch] font-serif text-[clamp(2.75rem,16vw,7.5rem)] font-light italic leading-[0.9] text-sage-ink">
-                        {t.about.title}
-                    </h2>
+                <aside className="sticky top-20 z-10 flex flex-col justify-center border-b border-sage/30 bg-paper px-6 py-8 sm:px-10 sm:py-10 lg:top-0 lg:h-svh lg:border-b-0 lg:border-r lg:px-16 lg:py-16 xl:px-24">
+                    <SectionHeading className="max-w-[8ch]">{t.about.title}</SectionHeading>
                 </aside>
 
                 <div>

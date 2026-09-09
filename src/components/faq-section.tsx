@@ -11,6 +11,7 @@ import {
     AccordionItem,
     AccordionTrigger,
 } from "@/components/ui/accordion"
+import { SectionHeading } from "@/components/section-heading"
 
 interface FaqItem {
     question: string
@@ -82,9 +83,7 @@ export function FaqSection() {
     return (
         <section id="faq" className="relative scroll-mt-20 bg-paper py-24 lg:py-32">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
-                <h2 className="mb-16 font-serif text-4xl font-light italic text-sage-ink lg:mb-20 lg:text-6xl">
-                    {faqContent.title}
-                </h2>
+                <SectionHeading className="mb-16 lg:mb-20">{faqContent.title}</SectionHeading>
 
                 <div className="mb-12 flex gap-1 overflow-x-auto border-b border-ink/15 pb-px [-ms-overflow-style:none] [scrollbar-width:none] lg:justify-between lg:overflow-visible [&::-webkit-scrollbar]:hidden">
                     {faqContent.categories.map((category, index) => (
