@@ -4,6 +4,7 @@ import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import type { Taller, TallerBlock, TallerImage } from "@/lib/talleres"
 import { titleToSlug } from "@/lib/talleres"
+import { VisibilityToggle } from "@/components/admin/admin-ui"
 
 interface TallerFormProps {
   initialData?: Partial<Taller>
@@ -20,6 +21,9 @@ export function TallerForm({ initialData, mode }: TallerFormProps) {
   const [coverImage, setCoverImage] = useState(initialData?.coverImage ?? "")
   const [blocks, setBlocks] = useState<TallerBlock[]>(initialData?.blocks ?? [])
   const [images, setImages] = useState<TallerImage[]>(initialData?.images ?? [])
+  const [published, setPublished] = useState(initialData?.published ?? true)
+  const [error, setError] = useState("")
+  const [saving, setSaving] = useState(false)
 
   const slug = titleToSlug(title)
 
@@ -84,6 +88,7 @@ export function TallerForm({ initialData, mode }: TallerFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
 
     const payload = {
       title,
@@ -93,32 +98,60 @@ export function TallerForm({ initialData, mode }: TallerFormProps) {
       coverImage: coverImage || undefined,
       blocks,
       images: images.filter((img) => img.url),
+      published,
     }
 
-    let res: Response
+    setSaving(true)
+    try {
+      const res =
+        mode === "create"
+          ? await fetch("/api/talleres", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
+          : await fetch(`/api/talleres/${initialData?.slug}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
 
-    if (mode === "create") {
-      res = await fetch("/api/talleres", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-    } else {
-      res = await fetch(`/api/talleres/${initialData?.slug}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-    }
+      if (res.ok) {
+        router.push("/admin/talleres")
+        router.refresh()
+        return
+      }
 
-    if (res.ok) {
-      router.push("/admin")
-      router.refresh()
+      const data = await res.json().catch(() => ({}))
+      setError(data.error ?? "No se pudo guardar el taller")
+    } catch {
+      setError("No se pudo conectar con el servidor")
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
+      {error && (
+        <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </p>
+      )}
+
+      {/* Visibilidad */}
+      <div className="flex flex-col gap-3 border border-neutral-200 bg-white p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-sm font-medium uppercase tracking-wider text-neutral-500">Visibilidad</h3>
+          <p className="mt-1 text-sm text-neutral-500">
+            {published
+              ? "Se ve en la home y en su página."
+              : "Queda guardado pero oculto: solo tú lo ves con sesión iniciada."}
+          </p>
+        </div>
+        <VisibilityToggle published={published} onChange={setPublished} />
+      </div>
+
       {/* Información básica */}
       <div className="border border-neutral-200 bg-white p-6">
         <h3 className="mb-6 text-sm font-medium uppercase tracking-wider text-neutral-500">
@@ -369,9 +402,10 @@ export function TallerForm({ initialData, mode }: TallerFormProps) {
         </button>
         <button
           type="submit"
-          className="bg-[#1a1a1a] px-6 py-3 text-sm text-white transition-colors duration-200 hover:bg-neutral-800"
+          disabled={saving}
+          className="bg-[#1a1a1a] px-6 py-3 text-sm text-white transition-colors duration-200 hover:bg-neutral-800 disabled:cursor-wait disabled:opacity-60"
         >
-          {mode === "create" ? "Crear taller" : "Guardar cambios"}
+          {saving ? "Guardando..." : mode === "create" ? "Crear taller" : "Guardar cambios"}
         </button>
       </div>
     </form>

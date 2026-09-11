@@ -49,6 +49,8 @@ export const translations = {
             detailFormSending: "Enviando...",
             detailFormSuccess: "¡Listo! Recibí tus datos y te contactaré pronto.",
             detailFormError: "No se pudo enviar. Por favor intenta de nuevo.",
+            detailCalendar: "Agendar una cita",
+            detailRegistration: "Inscribirme",
             contactEmail: "Contactar por email",
             loadError: "No se pudieron cargar los servicios. Recarga la página o escríbeme por WhatsApp.",
             empty: "Pronto publicaré los servicios vigentes. Mientras tanto, puedes escribirme.",
@@ -94,7 +96,8 @@ export const translations = {
             error: "No se pudo enviar el mensaje. Intenta de nuevo o escríbeme por WhatsApp.",
             termsBefore: "Acepto los",
             termsLink: "términos y condiciones",
-            termsAfter: "y la política de privacidad",
+            termsAnd: "y la",
+            privacyLink: "política de privacidad",
             optionPsychoanalysis: "Psicoanálisis con adultos",
             optionSupervision: "Supervisión clínica",
             optionStudyGroup: "Grupo de estudio",
@@ -193,6 +196,12 @@ export const translations = {
         },
         footer: {
             socialMedia: "Redes sociales",
+            privacy: "Política de privacidad",
+            terms: "Términos y condiciones",
+        },
+        legal: {
+            lastUpdated: "Última actualización",
+            backHome: "← Volver al inicio",
         },
         talleres: {
             title: "Talleres",
@@ -252,6 +261,8 @@ export const translations = {
             detailFormSending: "Sending...",
             detailFormSuccess: "Done! I received your details and will contact you soon.",
             detailFormError: "Could not send. Please try again.",
+            detailCalendar: "Book an appointment",
+            detailRegistration: "Register",
             items: [
                 {
                     title: "Psychoanalysis with Adults",
@@ -296,7 +307,8 @@ export const translations = {
             error: "The message could not be sent. Please try again or write to me on WhatsApp.",
             termsBefore: "I accept the",
             termsLink: "terms and conditions",
-            termsAfter: "and the privacy policy",
+            termsAnd: "and the",
+            privacyLink: "privacy policy",
             optionPsychoanalysis: "Psychoanalysis with adults",
             optionSupervision: "Clinical supervision",
             optionStudyGroup: "Study group",
@@ -395,6 +407,12 @@ export const translations = {
         },
         footer: {
             socialMedia: "Social Media",
+            privacy: "Privacy policy",
+            terms: "Terms and conditions",
+        },
+        legal: {
+            lastUpdated: "Last updated",
+            backHome: "← Back to home",
         },
         talleres: {
             title: "Workshops",
@@ -454,6 +472,8 @@ export const translations = {
             detailFormSending: "Envoi en cours...",
             detailFormSuccess: "C'est fait ! J'ai reçu vos coordonnées et je vous contacterai bientôt.",
             detailFormError: "Envoi impossible. Veuillez réessayer.",
+            detailCalendar: "Prendre rendez-vous",
+            detailRegistration: "M'inscrire",
             contactEmail: "Contacter par email",
             loadError: "Impossible de charger les services. Rechargez la page ou écrivez-moi sur WhatsApp.",
             empty: "Les services en cours seront publiés ici bientôt. En attendant, vous pouvez m'écrire.",
@@ -499,7 +519,8 @@ export const translations = {
             error: "Le message n'a pas pu être envoyé. Réessayez ou écrivez-moi sur WhatsApp.",
             termsBefore: "J'accepte les",
             termsLink: "conditions générales",
-            termsAfter: "et la politique de confidentialité",
+            termsAnd: "et la",
+            privacyLink: "politique de confidentialité",
             optionPsychoanalysis: "Psychanalyse avec des adultes",
             optionSupervision: "Supervision clinique",
             optionStudyGroup: "Groupe d'étude",
@@ -598,6 +619,12 @@ export const translations = {
         },
         footer: {
             socialMedia: "Réseaux Sociaux",
+            privacy: "Politique de confidentialité",
+            terms: "Conditions générales",
+        },
+        legal: {
+            lastUpdated: "Dernière mise à jour",
+            backHome: "← Retour à l'accueil",
         },
         talleres: {
             title: "Ateliers",

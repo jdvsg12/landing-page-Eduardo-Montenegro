@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { getServiceBySlug, saveService, deleteService } from "@/lib/db-services"
 import { getSession } from "@/lib/auth"
+import { serviceFieldsFromBody } from "@/lib/services"
+import { invalidBody, readJsonObject } from "@/lib/http"
 
 export async function GET(
   _request: Request,
@@ -10,7 +12,7 @@ export async function GET(
   const { slug } = await params
   const service = await getServiceBySlug(slug)
 
-  if (!service) {
+  if (!service || (!service.published && !(await getSession()))) {
     return NextResponse.json({ error: "Servicio no encontrado" }, { status: 404 })
   }
 
@@ -32,21 +34,12 @@ export async function PUT(
     return NextResponse.json({ error: "Servicio no encontrado" }, { status: 404 })
   }
 
-  const body = await request.json()
+  const body = await readJsonObject(request)
+  if (!body) return invalidBody()
 
   const updated = {
     ...existing,
-    title: body.title ?? existing.title,
-    kicker: body.kicker ?? existing.kicker,
-    excerpt: body.excerpt ?? existing.excerpt,
-    coverImage: body.coverImage !== undefined ? body.coverImage : existing.coverImage,
-    blocks: body.blocks ?? existing.blocks,
-    images: body.images ?? existing.images,
-    ctaType: body.ctaType ?? existing.ctaType,
-    whatsapp: body.whatsapp !== undefined ? body.whatsapp : existing.whatsapp,
-    waMessage: body.waMessage ?? existing.waMessage,
-    position: body.position !== undefined ? Number(body.position) : existing.position,
-    published: body.published !== undefined ? Boolean(body.published) : existing.published,
+    ...serviceFieldsFromBody(body, existing),
     updatedAt: new Date().toISOString(),
   }
 

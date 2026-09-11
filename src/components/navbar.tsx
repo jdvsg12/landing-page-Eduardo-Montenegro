@@ -142,7 +142,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
         : isInContact
         ? "bg-ink"
         : isInServices
-            ? "bg-sage-deep"
+            ? "bg-sage"
             : isScrolled && !isInHero
                 ? "bg-paper"
                 : "bg-transparent"

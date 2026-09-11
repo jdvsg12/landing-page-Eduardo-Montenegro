@@ -1,5 +1,5 @@
 import { getPublishedServices } from "@/lib/db-services"
-import { getAllTalleres } from "@/lib/db-talleres"
+import { getPublishedTalleres } from "@/lib/db-talleres"
 import type { Service } from "@/lib/services"
 import type { Taller } from "@/lib/talleres"
 
@@ -13,7 +13,7 @@ export async function getHomeCatalog(): Promise<HomeCatalog> {
     try {
         const [services, talleres] = await Promise.all([
             getPublishedServices(),
-            getAllTalleres(),
+            getPublishedTalleres(),
         ])
         return { services, talleres, loadError: false }
     } catch {

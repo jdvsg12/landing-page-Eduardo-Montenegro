@@ -18,6 +18,8 @@ export interface Taller {
   coverImage?: string
   blocks: TallerBlock[]
   images: TallerImage[]
+  /** Público: se ve en la página. Privado: solo lo ve el administrador con sesión iniciada. */
+  published: boolean
   createdAt: string
   updatedAt: string
 }
@@ -29,5 +31,6 @@ export function titleToSlug(title: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9\s-]/g, "")
     .trim()
-    .replace(/\s+/g, "-")
+    .replace(/[\s-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
 }

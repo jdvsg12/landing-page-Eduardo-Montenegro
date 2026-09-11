@@ -70,13 +70,17 @@ function SloganHeadline({
     let charIndex = 0
 
     return (
-        <h2 className="relative max-w-[16ch] px-1 text-center font-serif text-[clamp(2.1rem,11vw,6.75rem)] font-light italic leading-[0.95] tracking-[-0.03em] text-ink">
+        <h2
+            // Las letras van en spans sueltos para la animación; el nombre accesible es la frase completa.
+            aria-label={words.join(" ")}
+            className="relative max-w-[16ch] px-1 text-center font-serif text-[clamp(2.1rem,11vw,6.75rem)] font-light italic leading-[0.95] tracking-[-0.03em] text-ink"
+        >
             {words.map((word, wordIndex) => {
                 const isAccent = wordKey(word) === accent
                 const letters = Array.from(word)
 
                 return (
-                    <span key={`${word}-${wordIndex}`}>
+                    <span key={`${word}-${wordIndex}`} aria-hidden>
                         {letters.map((char) => {
                             const index = charIndex++
                             if (!progress) {
@@ -101,7 +105,14 @@ function SloganHeadline({
                                 />
                             )
                         })}
-                        {isAccent ? <br /> : wordIndex < words.length - 1 ? " " : null}
+                        {isAccent ? (
+                            <>
+                                {" "}
+                                <br />
+                            </>
+                        ) : wordIndex < words.length - 1 ? (
+                            " "
+                        ) : null}
                     </span>
                 )
             })}

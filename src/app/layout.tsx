@@ -7,6 +7,8 @@ import { LanguageProvider } from "@/lib/language-context"
 import { parseLanguage, languageToHtmlLang } from "@/lib/language"
 import { LANGUAGE_COOKIE } from "@/lib/language"
 import { SkipToContent } from "@/components/skip-to-content"
+import { getSiteContent } from "@/lib/db-content"
+import { pickLocale } from "@/lib/i18n-field"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -24,46 +26,60 @@ export const viewport: Viewport = {
     viewportFit: "cover",
 }
 
-export const metadata: Metadata = {
-    title: "Eduardo Montenegro Flórez | Psicólogo y Psicoanalista",
-    description:
-        "Especialista en Psicopatología y Salud Mental. Acompañamiento en malestar persistente, duelos y experiencias que dejan huella. Ningún sufrimiento es insignificante.",
-    openGraph: {
-        title: "Eduardo Montenegro Flórez | Psicólogo y Psicoanalista",
-        description: "Ningún sufrimiento es insignificante. Atención clínica para adultos, presencial y online.",
-        url: "https://www.eduardomontenegroflorez.com",
-        siteName: "Eduardo Montenegro Flórez",
-        locale: "es_CO",
-        type: "website",
-        images: [
-            {
-                url: "/image_c4bc3f.jpeg",
-                width: 1200,
-                height: 630,
-                alt: "Eduardo Montenegro Flórez - Psicólogo y Psicoanalista",
-            },
-        ],
-    },
+function safeUrl(value: string) {
+    try {
+        return value ? new URL(value) : undefined
+    } catch {
+        return undefined
+    }
+}
 
-    twitter: {
-        card: "summary_large_image",
-        title: "Eduardo Montenegro Flórez | Psicólogo y Psicoanalista",
-        description: "Especialista en Psicopatología y Salud Mental. Ningún sufrimiento es insignificante.",
-        images: ["/image_c4bc3f.jpeg"],
-    },
+const OG_LOCALE = { es: "es_CO", en: "en_US", fr: "fr_FR" } as const
 
-    icons: {
-        icon: [
-            {
-                url: "/favicon.ico",
-                media: "(prefers-color-scheme: light)",
-            },
-            {
-                url: "/icon-dark.png",
-                media: "(prefers-color-scheme: dark)",
-            },
-        ],
-    },
+export async function generateMetadata(): Promise<Metadata> {
+    const [cookieStore, seo] = await Promise.all([cookies(), getSiteContent("seo")])
+    const language = parseLanguage(cookieStore.get(LANGUAGE_COOKIE)?.value)
+    const title = pickLocale(seo.title, language)
+    const description = pickLocale(seo.description, language)
+    const keywords = pickLocale(seo.keywords, language)
+        .split(",")
+        .map((keyword) => keyword.trim())
+        .filter(Boolean)
+    const images = seo.ogImage ? [{ url: seo.ogImage, width: 1200, height: 630, alt: title }] : undefined
+
+    return {
+        metadataBase: safeUrl(seo.siteUrl),
+        title,
+        description,
+        keywords: keywords.length > 0 ? keywords : undefined,
+        openGraph: {
+            title,
+            description,
+            url: seo.siteUrl || undefined,
+            siteName: seo.siteName,
+            locale: OG_LOCALE[language],
+            type: "website",
+            images,
+        },
+        twitter: {
+            card: "summary_large_image",
+            title,
+            description,
+            images: seo.ogImage ? [seo.ogImage] : undefined,
+        },
+        icons: {
+            icon: [
+                {
+                    url: "/favicon.ico",
+                    media: "(prefers-color-scheme: light)",
+                },
+                {
+                    url: "/icon-dark.png",
+                    media: "(prefers-color-scheme: dark)",
+                },
+            ],
+        },
+    }
 }
 
 export default async function RootLayout({

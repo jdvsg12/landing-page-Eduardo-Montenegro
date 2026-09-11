@@ -2,21 +2,41 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import type { Service, ServiceBlock, ServiceImage, ServiceCtaType } from "@/lib/services"
+import type { Service, ServiceBlock, ServiceImage } from "@/lib/services"
 import type { LocalizedText } from "@/lib/i18n-field"
 import { emptyLocalizedText } from "@/lib/i18n-field"
 import { titleToSlug } from "@/lib/talleres"
 import type { Language } from "@/lib/translations"
+import {
+  Checkbox,
+  FallbackHint,
+  Field,
+  ImageField,
+  ListControls,
+  LocaleSwitcher,
+  Panel,
+  VisibilityToggle,
+  buttonClass,
+  inputClass,
+  missingLocales,
+  moveItem,
+  primaryButtonClass,
+} from "@/components/admin/admin-ui"
 
-const LOCALES: { code: Language; label: string }[] = [
-  { code: "es", label: "Español" },
-  { code: "en", label: "English" },
-  { code: "fr", label: "Français" },
-]
+const DEFAULT_WHATSAPP = "+573142793431"
 
 interface ServiceFormProps {
   initialData?: Partial<Service>
   mode: "create" | "edit"
+}
+
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value.trim())
+    return url.protocol === "https:" || url.protocol === "http:"
+  } catch {
+    return false
+  }
 }
 
 export function ServiceForm({ initialData, mode }: ServiceFormProps) {
@@ -28,16 +48,26 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
   const [title, setTitle] = useState<LocalizedText>(initialData?.title ?? emptyLocalizedText())
   const [kicker, setKicker] = useState<LocalizedText>(initialData?.kicker ?? emptyLocalizedText())
   const [excerpt, setExcerpt] = useState<LocalizedText>(initialData?.excerpt ?? emptyLocalizedText())
+  const [cardImage, setCardImage] = useState(initialData?.cardImage ?? "")
   const [coverImage, setCoverImage] = useState(initialData?.coverImage ?? "")
   const [blocks, setBlocks] = useState<ServiceBlock[]>(initialData?.blocks ?? [])
   const [images, setImages] = useState<ServiceImage[]>(initialData?.images ?? [])
-  const [ctaType, setCtaType] = useState<ServiceCtaType>(initialData?.ctaType ?? "whatsapp")
-  const [whatsapp, setWhatsapp] = useState(initialData?.whatsapp ?? "")
+  const [showWhatsapp, setShowWhatsapp] = useState(initialData?.showWhatsapp ?? true)
+  // Un servicio nuevo arranca con el WhatsApp del consultorio para que el botón por defecto funcione.
+  const [whatsapp, setWhatsapp] = useState(initialData?.whatsapp ?? (mode === "create" ? DEFAULT_WHATSAPP : ""))
   const [waMessage, setWaMessage] = useState<LocalizedText>(initialData?.waMessage ?? emptyLocalizedText())
+  const [showForm, setShowForm] = useState(initialData?.showForm ?? false)
+  const [showCalendar, setShowCalendar] = useState(initialData?.showCalendar ?? false)
+  const [calendarUrl, setCalendarUrl] = useState(initialData?.calendarUrl ?? "")
+  const [showRegistration, setShowRegistration] = useState(initialData?.showRegistration ?? false)
+  const [registrationUrl, setRegistrationUrl] = useState(initialData?.registrationUrl ?? "")
+  const [registrationLabel, setRegistrationLabel] = useState<LocalizedText>(
+    initialData?.registrationLabel ?? emptyLocalizedText()
+  )
   const [position, setPosition] = useState(initialData?.position ?? 0)
   const [published, setPublished] = useState(initialData?.published ?? true)
 
-  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
   const slug = mode === "create" ? titleToSlug(title.es ?? "") : (initialData?.slug ?? "")
@@ -47,77 +77,31 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
     value: string
   ) => setter((prev) => ({ ...prev, [locale]: value }))
 
-  const filledLocales = (field: LocalizedText) =>
-    LOCALES.filter((l) => field[l.code]?.trim()).map((l) => l.code)
+  const updateBlock = (index: number, patch: Partial<ServiceBlock>) =>
+    setBlocks(blocks.map((b, i) => (i === index ? { ...b, ...patch } : b)))
 
-  const addBlock = (type: ServiceBlock["type"]) => {
-    setBlocks([...blocks, { type, content: emptyLocalizedText() }])
-  }
-
-  const updateBlockType = (index: number, type: ServiceBlock["type"]) => {
-    setBlocks(blocks.map((b, i) => (i === index ? { ...b, type } : b)))
-  }
-
-  const updateBlockContent = (index: number, value: string) => {
-    setBlocks(
-      blocks.map((b, i) => (i === index ? { ...b, content: { ...b.content, [locale]: value } } : b))
-    )
-  }
-
-  const removeBlock = (index: number) => setBlocks(blocks.filter((_, i) => i !== index))
-
-  const moveBlock = (index: number, direction: -1 | 1) => {
-    const target = index + direction
-    if (target < 0 || target >= blocks.length) return
-    const copy = [...blocks]
-    ;[copy[index], copy[target]] = [copy[target], copy[index]]
-    setBlocks(copy)
-  }
-
-  const addImage = () => setImages([...images, { url: "", alt: "" }])
-
-  const updateImage = (index: number, field: Partial<ServiceImage>) => {
-    setImages(images.map((img, i) => (i === index ? { ...img, ...field } : img)))
-  }
-
-  const removeImage = (index: number) => setImages(images.filter((_, i) => i !== index))
-
-  const handleUpload = async (file: File, prefix: string): Promise<string | null> => {
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("prefix", prefix)
-      const res = await fetch("/api/admin/upload", { method: "POST", body: formData })
-      if (!res.ok) return null
-      const { url } = await res.json()
-      return url
-    } catch {
-      return null
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleFilePick = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    prefix: string,
-    onUrl: (url: string) => void
-  ) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = await handleUpload(file, prefix)
-    if (url) onUrl(url)
-    e.target.value = ""
-  }
+  const updateImage = (index: number, patch: Partial<ServiceImage>) =>
+    setImages(images.map((img, i) => (i === index ? { ...img, ...patch } : img)))
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
 
     if (!title.es?.trim()) {
-      setError("El título en español es obligatorio: define el slug y es el fallback de los demás idiomas.")
+      setError("El título en español es obligatorio: define el slug y es el respaldo de los demás idiomas.")
       setLocale("es")
+      return
+    }
+    if (showWhatsapp && !whatsapp.trim()) {
+      setError("Activaste el botón de WhatsApp: escribe el número.")
+      return
+    }
+    if (showCalendar && !isHttpUrl(calendarUrl)) {
+      setError("Activaste el calendario: pega un enlace válido que empiece por https://")
+      return
+    }
+    if (showRegistration && !isHttpUrl(registrationUrl)) {
+      setError("Activaste el link de inscripción: pega un enlace válido que empiece por https://")
       return
     }
 
@@ -125,399 +109,326 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
       title,
       kicker,
       excerpt,
-      coverImage: coverImage || undefined,
+      cardImage,
+      coverImage,
       blocks,
       images: images.filter((img) => img.url),
-      ctaType,
-      whatsapp: ctaType === "whatsapp" ? whatsapp : "",
+      showWhatsapp,
+      whatsapp,
       waMessage,
+      showForm,
+      showCalendar,
+      calendarUrl,
+      showRegistration,
+      registrationUrl,
+      registrationLabel,
       position,
       published,
     }
 
-    const res =
-      mode === "create"
-        ? await fetch("/api/services", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          })
-        : await fetch(`/api/services/${initialData?.slug}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          })
+    setSaving(true)
+    try {
+      const res =
+        mode === "create"
+          ? await fetch("/api/services", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
+          : await fetch(`/api/services/${initialData?.slug}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
 
-    if (res.ok) {
-      router.push("/admin")
-      router.refresh()
-      return
+      if (res.ok) {
+        router.push("/admin/servicios")
+        router.refresh()
+        return
+      }
+
+      const data = await res.json().catch(() => ({}))
+      setError(data.error ?? "No se pudo guardar el servicio")
+    } catch {
+      setError("No se pudo conectar con el servidor")
+    } finally {
+      setSaving(false)
     }
-
-    const data = await res.json().catch(() => ({}))
-    setError(data.error ?? "No se pudo guardar el servicio")
   }
 
-  const inputClass =
-    "w-full border border-neutral-200 bg-transparent px-3 py-2 text-neutral-900 focus:border-neutral-400 focus:outline-none"
+  const L = locale.toUpperCase()
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Selector de idioma: cambia qué versión se está editando en todos los campos traducibles */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border border-neutral-200 bg-white p-4">
-        <span className="text-sm font-medium uppercase tracking-wider text-neutral-500">
-          Editando en
-        </span>
-        <div className="flex gap-2">
-          {LOCALES.map((l) => (
-            <button
-              key={l.code}
-              type="button"
-              onClick={() => setLocale(l.code)}
-              className={`border px-4 py-2 text-sm transition-colors duration-200 ${
-                locale === l.code
-                  ? "border-[#1a1a1a] bg-[#1a1a1a] text-white"
-                  : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              {l.label}
-              {l.code !== "es" && !filledLocales(title).includes(l.code) && (
-                <span className="ml-2 text-xs opacity-60">•</span>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
+    // noValidate: los errores los muestra el formulario, en español y en un solo lugar.
+    <form onSubmit={handleSubmit} noValidate className="space-y-6">
+      <LocaleSwitcher locale={locale} onChange={setLocale} missing={missingLocales([title, kicker, excerpt])} />
 
       {error && (
-        <p className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">{error}</p>
+        <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </p>
       )}
 
-      {/* Información básica */}
-      <div className="border border-neutral-200 bg-white p-6">
-        <h3 className="mb-6 text-sm font-medium uppercase tracking-wider text-neutral-500">
-          Información básica
-        </h3>
-
-        <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
-            Título ({locale.toUpperCase()})
-          </label>
+      <Panel title="Información básica">
+        <Field
+          label={`Título (${L})`}
+          hint={
+            <>
+              {slug && <span className="font-mono">/servicios/{slug}</span>} <FallbackHint locale={locale} />
+            </>
+          }
+        >
           <input
             type="text"
             value={title[locale] ?? ""}
             onChange={(e) => setLocalized(setTitle, e.target.value)}
             className={inputClass}
           />
-          {slug && <p className="mt-1 font-mono text-xs text-neutral-400">/servicios/{slug}</p>}
-          {locale !== "es" && (
-            <p className="mt-1 text-xs text-neutral-400">
-              Si lo dejas vacío se muestra la versión en español.
-            </p>
-          )}
-        </div>
+        </Field>
 
-        <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
-            Bajada de la card ({locale.toUpperCase()})
-          </label>
+        <Field label={`Bajada de la card (${L})`} hint="Texto corto debajo del título en la card de la home.">
           <input
             type="text"
             value={kicker[locale] ?? ""}
             onChange={(e) => setLocalized(setKicker, e.target.value)}
-            placeholder="Texto corto que acompaña al título en la card"
             className={inputClass}
           />
-        </div>
+        </Field>
 
-        <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
-            Extracto ({locale.toUpperCase()})
-          </label>
+        <Field label={`Entradilla de la página interna (${L})`}>
           <textarea
             value={excerpt[locale] ?? ""}
             onChange={(e) => setLocalized(setExcerpt, e.target.value)}
             rows={3}
             className={`${inputClass} text-sm`}
           />
-        </div>
+        </Field>
 
-        <div className="mb-4 grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">Orden</label>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Orden" hint="Los números más bajos aparecen primero.">
             <input
               type="number"
               value={position}
               onChange={(e) => setPosition(Number(e.target.value))}
               className={inputClass}
             />
-          </div>
-          <div className="flex items-end">
-            <label className="flex items-center gap-2 pb-2 text-sm text-neutral-700">
-              <input
-                type="checkbox"
-                checked={published}
-                onChange={(e) => setPublished(e.target.checked)}
-                className="h-4 w-4"
-              />
-              Publicado
-            </label>
-          </div>
+          </Field>
+          <Field
+            label="Visibilidad"
+            hint={
+              published
+                ? "Se ve en la home y en su página."
+                : "Queda guardado pero oculto: solo tú lo ves con sesión iniciada."
+            }
+          >
+            <VisibilityToggle published={published} onChange={setPublished} />
+          </Field>
         </div>
+      </Panel>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
-            Imagen de portada
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={coverImage}
-              onChange={(e) => setCoverImage(e.target.value)}
-              placeholder="https://... o sube un archivo"
-              className={`flex-1 ${inputClass}`}
-            />
-            <label
-              className={`flex cursor-pointer items-center border px-3 py-2 text-sm transition-colors duration-200 ${
-                uploading
-                  ? "cursor-wait border-neutral-200 text-neutral-400"
-                  : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={uploading}
-                onChange={(e) => handleFilePick(e, "services/covers", setCoverImage)}
-              />
-              {uploading ? "Subiendo..." : "Subir"}
-            </label>
-          </div>
-          {coverImage && (
-            <img src={coverImage} alt="" className="mt-3 h-40 w-full max-w-sm object-cover" />
+      <Panel title="Imágenes" description="La card y la página interna pueden usar fotos distintas.">
+        <ImageField
+          label="Foto de la card (home)"
+          value={cardImage}
+          onChange={setCardImage}
+          prefix="services/covers"
+          hint="Se recorta para llenar la card; funciona mejor una foto horizontal o cuadrada. Si la dejas vacía se usa la portada interna."
+          previewClassName="h-48 w-full max-w-[16rem] object-cover"
+        />
+        <ImageField
+          label="Portada de la página interna"
+          value={coverImage}
+          onChange={setCoverImage}
+          prefix="services/covers"
+          hint="Banda a todo el ancho debajo del título; usa una foto horizontal amplia (16:9 o más ancha)."
+          previewClassName="h-40 w-full max-w-md object-cover"
+        />
+      </Panel>
+
+      <Panel
+        title="Botones y acciones"
+        description="Elige qué aparece al final de la página del servicio. Puedes activar varios a la vez."
+      >
+        <div className="space-y-4 border-l-2 border-neutral-200 pl-4">
+          <Checkbox
+            checked={showWhatsapp}
+            onChange={setShowWhatsapp}
+            label="Botón de WhatsApp"
+            description="Abre una conversación con un mensaje precargado."
+          />
+          {showWhatsapp && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Número de WhatsApp">
+                <input
+                  type="text"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="+573142793431"
+                  className={inputClass}
+                />
+              </Field>
+              <Field label={`Mensaje precargado (${L})`}>
+                <input
+                  type="text"
+                  value={waMessage[locale] ?? ""}
+                  onChange={(e) => setLocalized(setWaMessage, e.target.value)}
+                  placeholder="Hola, estoy interesado/a en..."
+                  className={inputClass}
+                />
+              </Field>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Llamado a la acción */}
-      <div className="border border-neutral-200 bg-white p-6">
-        <h3 className="mb-6 text-sm font-medium uppercase tracking-wider text-neutral-500">
-          Llamado a la acción
-        </h3>
-
-        <div className="mb-4 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setCtaType("whatsapp")}
-            className={`border px-4 py-2 text-sm transition-colors duration-200 ${
-              ctaType === "whatsapp"
-                ? "border-[#1a1a1a] bg-[#1a1a1a] text-white"
-                : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-            }`}
-          >
-            WhatsApp
-          </button>
-          <button
-            type="button"
-            onClick={() => setCtaType("form")}
-            className={`border px-4 py-2 text-sm transition-colors duration-200 ${
-              ctaType === "form"
-                ? "border-[#1a1a1a] bg-[#1a1a1a] text-white"
-                : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-            }`}
-          >
-            Formulario (encuentros grupales)
-          </button>
+        <div className="space-y-4 border-l-2 border-neutral-200 pl-4">
+          <Checkbox
+            checked={showForm}
+            onChange={setShowForm}
+            label="Formulario de inscripción"
+            description="Formulario propio del sitio. Las respuestas quedan en el dashboard y llegan por correo."
+          />
         </div>
 
-        {ctaType === "whatsapp" ? (
-          <>
-            <div className="mb-4">
-              <label className="mb-1 block text-sm font-medium text-neutral-700">
-                Número de WhatsApp
-              </label>
+        <div className="space-y-4 border-l-2 border-neutral-200 pl-4">
+          <Checkbox
+            checked={showCalendar}
+            onChange={setShowCalendar}
+            label="Botón de calendario"
+            description="Enlace a tu agenda en línea (Google Calendar, Calendly, etc.) para reservar una cita."
+          />
+          {showCalendar && (
+            <Field label="Enlace del calendario">
               <input
-                type="text"
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                placeholder="+573142793431"
+                type="url"
+                value={calendarUrl}
+                onChange={(e) => setCalendarUrl(e.target.value)}
+                placeholder="https://calendar.app.google/..."
                 className={inputClass}
               />
-            </div>
-            <div>
-              <label className="mb-1 block text-sm font-medium text-neutral-700">
-                Mensaje precargado ({locale.toUpperCase()})
-              </label>
-              <input
-                type="text"
-                value={waMessage[locale] ?? ""}
-                onChange={(e) => setLocalized(setWaMessage, e.target.value)}
-                placeholder="Hola, estoy interesado/a en..."
-                className={inputClass}
-              />
-            </div>
-          </>
-        ) : (
-          <p className="text-sm text-neutral-500">
-            La página del servicio mostrará un formulario de inscripción. Las respuestas quedan en
-            la tabla <code className="font-mono text-xs">service_leads</code> y llegan por correo.
-          </p>
-        )}
-      </div>
+            </Field>
+          )}
+        </div>
 
-      {/* Contenido */}
-      <div className="border border-neutral-200 bg-white p-6">
-        <h3 className="mb-6 text-sm font-medium uppercase tracking-wider text-neutral-500">
-          Contenido ({locale.toUpperCase()})
-        </h3>
-
-        <div className="space-y-4">
-          {blocks.map((block, index) => (
-            <div key={index} className="flex gap-2">
-              <div className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => moveBlock(index, -1)}
-                  disabled={index === 0}
-                  className="h-6 w-6 border border-neutral-200 text-xs text-neutral-400 transition-colors duration-200 hover:bg-neutral-100 disabled:opacity-30"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveBlock(index, 1)}
-                  disabled={index === blocks.length - 1}
-                  className="h-6 w-6 border border-neutral-200 text-xs text-neutral-400 transition-colors duration-200 hover:bg-neutral-100 disabled:opacity-30"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeBlock(index)}
-                  className="h-6 w-6 border border-neutral-200 text-xs text-red-800 transition-colors duration-200 hover:bg-red-50 hover:text-red-900"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex-1">
-                <select
-                  value={block.type}
-                  onChange={(e) => updateBlockType(index, e.target.value as ServiceBlock["type"])}
-                  className="mb-2 w-full border border-neutral-200 bg-transparent px-3 py-1 text-sm text-neutral-700 focus:border-neutral-400 focus:outline-none"
-                >
-                  <option value="heading">Título</option>
-                  <option value="paragraph">Párrafo</option>
-                </select>
-                <textarea
-                  value={block.content[locale] ?? ""}
-                  onChange={(e) => updateBlockContent(index, e.target.value)}
-                  rows={block.type === "heading" ? 1 : 4}
-                  className={`w-full border border-neutral-200 bg-transparent px-3 py-2 text-neutral-900 focus:border-neutral-400 focus:outline-none ${
-                    block.type === "heading" ? "text-lg font-medium" : "text-sm leading-relaxed"
-                  }`}
+        <div className="space-y-4 border-l-2 border-neutral-200 pl-4">
+          <Checkbox
+            checked={showRegistration}
+            onChange={setShowRegistration}
+            label="Link de inscripción externo"
+            description="Botón hacia un formulario externo, por ejemplo el Google Form de inscripción al grupo de estudio."
+          />
+          {showRegistration && (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <Field label="Enlace de inscripción">
+                <input
+                  type="url"
+                  value={registrationUrl}
+                  onChange={(e) => setRegistrationUrl(e.target.value)}
+                  placeholder="https://forms.gle/..."
+                  className={inputClass}
                 />
-              </div>
+              </Field>
+              <Field label={`Texto del botón (${L})`} hint="Si lo dejas vacío dice “Inscribirme”.">
+                <input
+                  type="text"
+                  value={registrationLabel[locale] ?? ""}
+                  onChange={(e) => setLocalized(setRegistrationLabel, e.target.value)}
+                  placeholder="Inscribirme al grupo"
+                  className={inputClass}
+                />
+              </Field>
             </div>
-          ))}
+          )}
         </div>
+      </Panel>
 
-        <div className="mt-4 flex gap-2">
+      <Panel title={`Contenido de la página interna (${L})`}>
+        {blocks.length === 0 && <p className="text-sm text-neutral-500">Todavía no hay bloques de contenido.</p>}
+        {blocks.map((block, index) => (
+          <div key={index} className="border border-neutral-200 p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <select
+                value={block.type}
+                onChange={(e) => updateBlock(index, { type: e.target.value as ServiceBlock["type"] })}
+                className="border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700 focus:border-ink focus:outline-none"
+              >
+                <option value="heading">Título</option>
+                <option value="paragraph">Párrafo</option>
+              </select>
+              <ListControls
+                label="bloque"
+                onUp={() => setBlocks(moveItem(blocks, index, -1))}
+                onDown={() => setBlocks(moveItem(blocks, index, 1))}
+                onRemove={() => setBlocks(blocks.filter((_, i) => i !== index))}
+                disableUp={index === 0}
+                disableDown={index === blocks.length - 1}
+              />
+            </div>
+            <textarea
+              value={block.content[locale] ?? ""}
+              onChange={(e) => updateBlock(index, { content: { ...block.content, [locale]: e.target.value } })}
+              rows={block.type === "heading" ? 1 : 4}
+              className={`${inputClass} ${block.type === "heading" ? "text-lg font-medium" : "text-sm leading-relaxed"}`}
+            />
+          </div>
+        ))}
+        <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => addBlock("paragraph")}
-            className="border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition-colors duration-200 hover:bg-neutral-100"
+            onClick={() => setBlocks([...blocks, { type: "paragraph", content: emptyLocalizedText() }])}
+            className={buttonClass}
           >
             + Párrafo
           </button>
           <button
             type="button"
-            onClick={() => addBlock("heading")}
-            className="border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition-colors duration-200 hover:bg-neutral-100"
+            onClick={() => setBlocks([...blocks, { type: "heading", content: emptyLocalizedText() }])}
+            className={buttonClass}
           >
             + Título
           </button>
         </div>
-      </div>
+      </Panel>
 
-      {/* Imágenes adicionales */}
-      <div className="border border-neutral-200 bg-white p-6">
-        <h3 className="mb-6 text-sm font-medium uppercase tracking-wider text-neutral-500">
-          Imágenes adicionales
-        </h3>
-
-        <div className="space-y-4">
-          {images.map((img, index) => (
-            <div key={index} className="flex items-start gap-2">
-              <div className="flex-1 space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={img.url}
-                    onChange={(e) => updateImage(index, { url: e.target.value })}
-                    placeholder="URL de la imagen"
-                    className={`flex-1 ${inputClass} text-sm`}
-                  />
-                  <label
-                    className={`flex cursor-pointer items-center border px-2 py-2 text-xs transition-colors duration-200 ${
-                      uploading
-                        ? "cursor-wait border-neutral-200 text-neutral-400"
-                        : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-                    }`}
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploading}
-                      onChange={(e) =>
-                        handleFilePick(e, "services/blocks", (url) => updateImage(index, { url }))
-                      }
-                    />
-                    {uploading ? "..." : "Subir"}
-                  </label>
-                </div>
-                <input
-                  type="text"
-                  value={img.alt ?? ""}
-                  onChange={(e) => updateImage(index, { alt: e.target.value })}
-                  placeholder="Texto alternativo"
-                  className={`w-full ${inputClass} text-sm`}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => removeImage(index)}
-                className="mt-2 h-6 w-6 border border-neutral-200 text-xs text-red-800 transition-colors duration-200 hover:bg-red-50 hover:text-red-900"
-              >
-                ✕
-              </button>
+      <Panel title="Imágenes adicionales" description="Galería al final del contenido.">
+        {images.map((img, index) => (
+          <div key={index} className="flex items-start gap-3 border border-neutral-200 p-3">
+            <div className="min-w-0 flex-1 space-y-2">
+              <ImageField
+                label={`Imagen ${index + 1}`}
+                value={img.url}
+                onChange={(url) => updateImage(index, { url })}
+                prefix="services/blocks"
+                previewClassName="h-28 w-40 object-cover"
+              />
+              <input
+                type="text"
+                value={img.alt ?? ""}
+                onChange={(e) => updateImage(index, { alt: e.target.value })}
+                placeholder="Texto alternativo (describe la imagen)"
+                className={`${inputClass} text-sm`}
+              />
             </div>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={addImage}
-          className="mt-4 border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition-colors duration-200 hover:bg-neutral-100"
-        >
+            <ListControls
+              label="imagen"
+              onUp={() => setImages(moveItem(images, index, -1))}
+              onDown={() => setImages(moveItem(images, index, 1))}
+              onRemove={() => setImages(images.filter((_, i) => i !== index))}
+              disableUp={index === 0}
+              disableDown={index === images.length - 1}
+            />
+          </div>
+        ))}
+        <button type="button" onClick={() => setImages([...images, { url: "", alt: "" }])} className={buttonClass}>
           + Agregar imagen
         </button>
-      </div>
+      </Panel>
 
-      <div className="flex justify-end gap-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="border border-neutral-300 px-6 py-3 text-sm text-neutral-700 transition-colors duration-200 hover:bg-neutral-100"
-        >
+      <div className="sticky bottom-0 z-20 -mx-4 flex justify-end gap-3 border-t border-neutral-200 bg-paper/95 px-4 py-4 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
+        <button type="button" onClick={() => router.back()} className={buttonClass}>
           Cancelar
         </button>
-        <button
-          type="submit"
-          className="bg-[#1a1a1a] px-6 py-3 text-sm text-white transition-colors duration-200 hover:bg-neutral-800"
-        >
-          {mode === "create" ? "Crear servicio" : "Guardar cambios"}
+        <button type="submit" disabled={saving} className={primaryButtonClass}>
+          {saving ? "Guardando..." : mode === "create" ? "Crear servicio" : "Guardar cambios"}
         </button>
       </div>
     </form>

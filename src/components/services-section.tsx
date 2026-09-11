@@ -19,7 +19,7 @@ export function ServicesSection({
     const t = getTranslation(language)
 
     return (
-        <section id="services" className="relative scroll-mt-20 bg-sage-deep">
+        <section id="services" className="relative scroll-mt-20 bg-sage">
             <ServiceCards
                 services={services}
                 talleres={talleres}

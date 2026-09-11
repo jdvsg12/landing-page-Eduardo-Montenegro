@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
-import { getAllServices, getPublishedServices, saveService } from "@/lib/db-services"
+import { getAllServices, getPublishedServices, getServiceBySlug, saveService } from "@/lib/db-services"
+import { invalidBody, readJsonObject } from "@/lib/http"
 import { titleToSlug } from "@/lib/talleres"
-import type { Service } from "@/lib/services"
+import { EMPTY_SERVICE_INPUT, serviceFieldsFromBody, type Service } from "@/lib/services"
 import { getSession } from "@/lib/auth"
 
 export async function GET(request: Request) {
@@ -21,35 +22,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 })
   }
 
-  const body = await request.json()
-  const { title, kicker, excerpt, coverImage, blocks, images, ctaType, whatsapp, waMessage, position, published } = body
+  const body = await readJsonObject(request)
+  if (!body) return invalidBody()
+  const fields = serviceFieldsFromBody(body, EMPTY_SERVICE_INPUT)
 
-  if (!title?.es?.trim()) {
+  if (!fields.title?.es?.trim()) {
     return NextResponse.json({ error: "El título en español es obligatorio" }, { status: 400 })
   }
 
-  const slug = titleToSlug(title.es)
+  const slug = titleToSlug(fields.title.es)
 
   if (!slug) {
     return NextResponse.json({ error: "El título no genera un slug válido" }, { status: 400 })
   }
 
+  // El guardado es un upsert por slug: sin esta verificación un título repetido pisaría otro servicio.
+  if (await getServiceBySlug(slug)) {
+    return NextResponse.json(
+      { error: `Ya existe un servicio con la dirección /servicios/${slug}. Cambia el título.` },
+      { status: 409 }
+    )
+  }
+
   const now = new Date().toISOString()
 
   const service: Service = {
+    ...fields,
     id: crypto.randomUUID(),
     slug,
-    title,
-    kicker: kicker ?? {},
-    excerpt: excerpt ?? {},
-    coverImage: coverImage || undefined,
-    blocks: blocks ?? [],
-    images: images ?? [],
-    ctaType: ctaType === "form" ? "form" : "whatsapp",
-    whatsapp: whatsapp || undefined,
-    waMessage: waMessage ?? {},
-    position: Number.isFinite(Number(position)) ? Number(position) : 0,
-    published: published !== false,
     createdAt: now,
     updatedAt: now,
   }

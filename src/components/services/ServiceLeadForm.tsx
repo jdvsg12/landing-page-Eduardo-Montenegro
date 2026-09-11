@@ -132,14 +132,22 @@ export function ServiceLeadForm({ slug }: ServiceLeadFormProps) {
                     <label htmlFor="service-lead-terms" className="pt-2.5 text-sm text-white/80">
                         {t.contact.termsBefore}{" "}
                         <a
-                            href="/Politica_Proteccion_Datos_Colombia.pdf"
+                            href="/terminos"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-green-400 underline hover:text-green-300"
                         >
                             {t.contact.termsLink}
                         </a>{" "}
-                        {t.contact.termsAfter}
+                        {t.contact.termsAnd}{" "}
+                        <a
+                            href="/privacidad"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-green-400 underline hover:text-green-300"
+                        >
+                            {t.contact.privacyLink}
+                        </a>
                     </label>
                 </div>
                 {errors.terms && (

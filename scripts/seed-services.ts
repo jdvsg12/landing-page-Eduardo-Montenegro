@@ -94,7 +94,7 @@ async function main() {
       },
     }))
 
-    const ctaType = FORM_CTA_INDEXES.has(index) ? ("form" as const) : ("whatsapp" as const)
+    const withForm = FORM_CTA_INDEXES.has(index)
 
     await saveService({
       id: existing?.id ?? crypto.randomUUID(),
@@ -102,19 +102,26 @@ async function main() {
       title,
       kicker: emptyLocalizedText(),
       excerpt,
-      coverImage: undefined,
+      cardImage: existing?.cardImage,
+      coverImage: existing?.coverImage,
       blocks,
       images: [],
-      ctaType,
-      whatsapp: ctaType === "whatsapp" ? whatsapp : undefined,
+      showWhatsapp: !withForm,
+      whatsapp: withForm ? undefined : whatsapp,
       waMessage,
+      showForm: withForm,
+      showCalendar: existing?.showCalendar ?? false,
+      calendarUrl: existing?.calendarUrl,
+      showRegistration: existing?.showRegistration ?? false,
+      registrationUrl: existing?.registrationUrl,
+      registrationLabel: existing?.registrationLabel ?? emptyLocalizedText(),
       position: index,
       published: true,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
     })
 
-    console.log(`✔ ${slug} (${ctaType}, ${blocks.length} bloques)`)
+    console.log(`✔ ${slug} (${withForm ? "form" : "whatsapp"}, ${blocks.length} bloques)`)
   }
 
   console.log("\nListo. Falta subir portadas y escribir las bajadas desde /admin.")

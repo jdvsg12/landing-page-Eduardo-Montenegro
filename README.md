@@ -209,7 +209,17 @@ landing-page-Eduardo-Montenegro/
 
 ## 🧪 Testing
 
-The project includes form validation with Zod and error handling on both client and server.
+Tests never touch the real Neon database or send real email: they run against an in-memory Postgres (PGlite, enabled with `DB_DRIVER=pglite`) and a fake Resend server.
+
+```bash
+npm test            # unit + data-layer tests (Vitest)
+npm run test:e2e    # end-to-end tests (Playwright, uses the installed Google Chrome)
+npm run test:all    # both
+```
+
+- `npm run test:e2e` builds an isolated production bundle in `.next-e2e/`, starts it on port 3100 with test credentials (`tests/e2e/env.ts`) and runs the desktop and mobile projects.
+- To iterate faster, start the server once with `bash tests/e2e/start-server.sh` (and `node tests/e2e/mock-resend.mjs`), then run `E2E_REUSE=1 npx playwright test`.
+- Failures leave a trace and screenshot in `test-results/`; open the report with `npx playwright show-report`.
 
 ## 📦 Production Build
 

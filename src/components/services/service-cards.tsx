@@ -382,28 +382,29 @@ function ServicePinCard({
 }) {
     const title = pickLocale(service.title, language)
     const kicker = pickLocale(service.kicker, language)
+    const cardImage = service.cardImage || service.coverImage
 
     return (
         <Link
             href={`/servicios/${service.slug}`}
             className="block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
-            <article className="flex h-full flex-col bg-paper p-5 text-ink">
+            <article className="flex h-full flex-col bg-sage-deep p-5 text-white">
                 <div className={stretch ? COVER_CLASS_STRETCH : COVER_CLASS}>
-                    {service.coverImage ? (
+                    {cardImage ? (
                         progress ? (
-                            <ParallaxCover src={service.coverImage} alt={title} index={index} progress={progress} />
+                            <ParallaxCover src={cardImage} alt={title} index={index} progress={progress} />
                         ) : (
-                            <MediaImage src={service.coverImage} alt={title} sizes={CARD_IMAGE_SIZES} />
+                            <MediaImage src={cardImage} alt={title} sizes={CARD_IMAGE_SIZES} />
                         )
                     ) : (
                         <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
                     )}
                 </div>
-                <h3 className="mt-5 line-clamp-2 font-serif text-[1.45rem] font-light italic leading-[1.15] text-sage-ink lg:text-[1.65rem]">
+                <h3 className="mt-5 line-clamp-2 font-serif text-[1.45rem] font-light italic leading-[1.15] text-white lg:text-[1.65rem]">
                     {title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-sage-ink">{kicker || "—"}</p>
+                <p className="mt-2 text-sm leading-relaxed text-white/80">{kicker || "—"}</p>
             </article>
         </Link>
     )
@@ -425,7 +426,7 @@ function TallerPinCard({
             href={`/talleres/${taller.slug}`}
             className="block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
-            <article className="flex h-full flex-col bg-paper p-5 text-ink">
+            <article className="flex h-full flex-col bg-sage-deep p-5 text-white">
                 <div className={stretch ? COVER_CLASS_STRETCH : COVER_CLASS}>
                     {taller.coverImage ? (
                         <MediaImage src={taller.coverImage} alt={taller.title} sizes={CARD_IMAGE_SIZES} />
@@ -433,10 +434,10 @@ function TallerPinCard({
                         <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
                     )}
                 </div>
-                <h3 className="mt-5 line-clamp-2 font-serif text-[1.45rem] font-light italic leading-[1.15] text-sage-ink lg:text-[1.65rem]">
+                <h3 className="mt-5 line-clamp-2 font-serif text-[1.45rem] font-light italic leading-[1.15] text-white lg:text-[1.65rem]">
                     {taller.title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-sage-ink">{subtitle}</p>
+                <p className="mt-2 text-sm leading-relaxed text-white/80">{subtitle}</p>
             </article>
         </Link>
     )
@@ -500,7 +501,7 @@ function OrbitalField() {
     return (
         <svg
             aria-hidden
-            className="pointer-events-none absolute inset-0 h-full w-full text-sage"
+            className="pointer-events-none absolute inset-0 h-full w-full text-white/50"
             viewBox="0 0 1440 900"
             preserveAspectRatio="xMidYMid slice"
         >

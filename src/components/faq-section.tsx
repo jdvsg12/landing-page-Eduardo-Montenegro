@@ -4,7 +4,8 @@ import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion"
 import { useLanguage } from "@/lib/language-context"
-import { getTranslation } from "@/lib/translations"
+import { pickLocale } from "@/lib/i18n-field"
+import type { FaqContent } from "@/lib/site-content"
 import {
     Accordion,
     AccordionContent,
@@ -12,25 +13,6 @@ import {
     AccordionTrigger,
 } from "@/components/ui/accordion"
 import { SectionHeading } from "@/components/section-heading"
-
-interface FaqItem {
-    question: string
-    answer: string
-}
-
-interface FaqCategory {
-    name: string
-    items: FaqItem[]
-}
-
-interface FaqTranslations {
-    title: string
-    categories: FaqCategory[]
-}
-
-interface Translations {
-    faq: FaqTranslations
-}
 
 const easeConsultorio: [number, number, number, number] = [0.16, 1, 0.3, 1]
 
@@ -71,14 +53,28 @@ function CategoryTab({
     )
 }
 
-export function FaqSection() {
+export function FaqSection({ content }: { content: FaqContent }) {
     const { language } = useLanguage()
-    const t = getTranslation(language) as Translations
     const reduceMotion = usePrefersReducedMotion()
     const [activeCategory, setActiveCategory] = useState(0)
     const [hasSwapped, setHasSwapped] = useState(false)
 
-    const faqContent = t.faq
+    const faqContent = {
+        title: pickLocale(content.title, language),
+        categories: content.categories
+            .map((category) => ({
+                name: pickLocale(category.name, language),
+                items: category.items
+                    .map((item) => ({
+                        question: pickLocale(item.question, language),
+                        answer: pickLocale(item.answer, language),
+                    }))
+                    .filter((item) => item.question && item.answer),
+            }))
+            .filter((category) => category.name && category.items.length > 0),
+    }
+
+    if (faqContent.categories.length === 0) return null
 
     return (
         <section id="faq" className="relative scroll-mt-20 bg-paper py-24 lg:py-32">
@@ -88,7 +84,7 @@ export function FaqSection() {
                 <div className="mb-12 flex gap-1 overflow-x-auto border-b border-ink/15 pb-px [-ms-overflow-style:none] [scrollbar-width:none] lg:justify-between lg:overflow-visible [&::-webkit-scrollbar]:hidden">
                     {faqContent.categories.map((category, index) => (
                         <CategoryTab
-                            key={category.name}
+                            key={`${index}-${category.name}`}
                             name={category.name}
                             isActive={activeCategory === index}
                             reduceMotion={reduceMotion}
