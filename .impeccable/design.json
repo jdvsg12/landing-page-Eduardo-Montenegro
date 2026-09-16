@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-02T02:50:00.000Z",
+  "title": "Design System: Eduardo Montenegro Flórez",
+  "extensions": {
+    "colorMeta": {
+      "sage": { "role": "primary", "displayName": "Sage", "canonical": "#8F958B" },
+      "sage-deep": { "role": "primary", "displayName": "Sage deep", "canonical": "#3f443d" },
+      "sage-ink": { "role": "primary", "displayName": "Sage ink", "canonical": "#4a5048" },
+      "paper": { "role": "neutral", "displayName": "Paper", "canonical": "#F2F1EE" },
+      "surface": { "role": "neutral", "displayName": "Surface", "canonical": "#D9D9D9" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#1a1a1a" },
+      "white": { "role": "neutral", "displayName": "White", "canonical": "#ffffff" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Títulos de servicio y sección." },
+      "headline": { "displayName": "Headline", "purpose": "Contacto, FAQ, talleres." },
+      "title": { "displayName": "Title", "purpose": "Subtítulos de bloque." },
+      "body": { "displayName": "Body", "purpose": "Biografía, FAQ, fichas." },
+      "label": { "displayName": "Label", "purpose": "Kickers, badges, nav." }
+    },
+    "shadows": [
+      {
+        "name": "section-overlap",
+        "value": "0 -20px 60px rgba(0,0,0,0.15)",
+        "purpose": "Una sección tapa a la anterior al scrollear."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-consultorio",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Wipe de clip-path del lema, título del hero y cambio de pestaña FAQ."
+      },
+      {
+        "name": "reduce",
+        "value": "prefers-reduced-motion: reduce",
+        "purpose": "Lema y hero visibles de inmediato; marquee parado; menú móvil en fundido."
+      }
+    ],
+    "breakpoints": [
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  }
+}
