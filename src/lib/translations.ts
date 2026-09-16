@@ -36,6 +36,7 @@ export const translations = {
         },
         services: {
             title: "Servicios",
+            badge: "Servicio",
             seeMore: "Ver más",
             seeLess: "Ver menos",
             contactWhatsApp: "Contactar por WhatsApp",
@@ -248,6 +249,7 @@ export const translations = {
         },
         services: {
             title: "Services",
+            badge: "Service",
             seeMore: "See more",
             seeLess: "See less",
             contactWhatsApp: "Contact me on WhatsApp",
@@ -459,6 +461,7 @@ export const translations = {
         },
         services: {
             title: "Services",
+            badge: "Service",
             seeMore: "Voir plus",
             seeLess: "Voir moins",
             contactWhatsApp: "Contacter via WhatsApp",

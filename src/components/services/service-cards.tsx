@@ -1,23 +1,29 @@
 "use client"
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
-import { motion, useScroll, useTransform, type MotionValue } from "motion/react"
 import { pickLocale } from "@/lib/i18n-field"
 import { dateLocale } from "@/lib/language"
 import type { Service } from "@/lib/services"
 import type { Taller } from "@/lib/talleres"
 import type { Language } from "@/lib/translations"
 import { MediaImage } from "@/components/media-image"
-import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion"
 import { sectionHeadingClassName } from "@/components/section-heading"
 
-const GAP = 24
-const COVER_CLASS = "relative h-[16.5rem] overflow-hidden bg-sage sm:h-[18rem] lg:h-[24rem]"
-/** En modo de 1 columna la portada crece para llenar el alto disponible, en vez de quedar chica y suelta. */
-const COVER_CLASS_STRETCH = "relative min-h-0 flex-1 overflow-hidden bg-sage"
-const CARD_IMAGE_SIZES = "(min-width: 1024px) 22vw, (min-width: 768px) 45vw, 90vw"
-const EASE_CONSULTORIO: [number, number, number, number] = [0.16, 1, 0.3, 1]
+/** En móvil la portada se mide contra el viewport para que la tarjeta ocupe ~60% del alto; en la grilla vuelve a alto fijo. */
+const COVER_CLASS = "relative h-[38svh] overflow-hidden bg-sage lg:h-[24rem]"
+const CARD_IMAGE_SIZES = "(min-width: 1024px) 30vw, (min-width: 640px) 55vw, 82vw"
+
+/** Forma común para que Servicios y Talleres compartan exactamente la misma tarjeta. */
+interface CardData {
+    id: string
+    href: string
+    title: string
+    subtitle: string
+    coverImage?: string
+    badge: string
+    ctaLabel: string
+}
 
 export function ServiceCards({
     services,
@@ -25,16 +31,21 @@ export function ServiceCards({
     language,
     heading,
     talleresHeading,
+    ctaLabel,
+    talleresCtaLabel,
+    serviceBadge,
+    tallerBadge,
 }: {
     services: Service[]
     talleres: Taller[]
     language: Language
-    ctaLabel: string
     heading: string
     talleresHeading: string
+    ctaLabel: string
+    talleresCtaLabel: string
+    serviceBadge: string
+    tallerBadge: string
 }) {
-    const reduceMotion = usePrefersReducedMotion()
-
     if (services.length === 0 && talleres.length === 0) {
         return (
             <div className="px-6 py-16 lg:px-10">
@@ -43,360 +54,142 @@ export function ServiceCards({
         )
     }
 
-    if (reduceMotion) {
-        return (
-            <StackedCatalog
-                services={services}
-                talleres={talleres}
-                language={language}
-                heading={heading}
-                talleresHeading={talleresHeading}
-                reduceMotion={reduceMotion}
-            />
-        )
-    }
+    const serviceItems = normalizeServices(services, language, serviceBadge, ctaLabel)
+    const tallerItems = normalizeTalleres(talleres, language, tallerBadge, talleresCtaLabel)
 
     return (
-        <PinnedTrack
-            services={services}
-            talleres={talleres}
-            language={language}
-            heading={heading}
-            talleresHeading={talleresHeading}
-        />
-    )
-}
-
-function StackedCatalog({
-    services,
-    talleres,
-    language,
-    heading,
-    talleresHeading,
-    reduceMotion,
-}: {
-    services: Service[]
-    talleres: Taller[]
-    language: Language
-    heading: string
-    talleresHeading: string
-    reduceMotion: boolean
-}) {
-    return (
-        <div className="relative overflow-x-clip px-6 py-16 sm:py-20 lg:px-10">
-            <div className="pointer-events-none absolute inset-0 opacity-80">
+        <>
+            <div className="pointer-events-none absolute inset-0 opacity-40">
                 <OrbitalField />
             </div>
-
-            {services.length > 0 ? (
-                <StackedBlock title={heading} heading="h2">
-                    {services.map((service, index) => (
-                        <StackedItem key={service.id} index={index} reduceMotion={reduceMotion}>
-                            <ServicePinCard service={service} language={language} index={index} />
-                        </StackedItem>
-                    ))}
-                </StackedBlock>
-            ) : null}
-
-            {talleres.length > 0 ? (
-                <StackedBlock title={talleresHeading} heading="h3" spaced={services.length > 0}>
-                    {talleres.map((taller, index) => (
-                        <StackedItem key={taller.id} index={index} reduceMotion={reduceMotion}>
-                            <TallerPinCard taller={taller} language={language} />
-                        </StackedItem>
-                    ))}
-                </StackedBlock>
-            ) : null}
-        </div>
+            <CardGroup heading={heading} items={serviceItems} />
+            <CardGroup heading={talleresHeading} items={tallerItems} />
+        </>
     )
 }
 
-function StackedBlock({
-    title,
-    heading: Heading,
-    spaced,
-    children,
-}: {
-    title: string
-    heading: "h2" | "h3"
-    spaced?: boolean
-    children: ReactNode
-}) {
-    return (
-        <div className={`relative ${spaced ? "mt-16 sm:mt-20" : ""}`}>
-            <Heading className={sectionHeadingClassName("white", "max-w-[12ch]")}>
-                {title}
-            </Heading>
-            <ul className="mt-8 grid grid-cols-1 gap-5 sm:mt-10 sm:gap-6 lg:grid-cols-2">{children}</ul>
-        </div>
-    )
+function normalizeServices(services: Service[], language: Language, badge: string, ctaLabel: string): CardData[] {
+    return services.map((service) => ({
+        id: service.id,
+        href: `/servicios/${service.slug}`,
+        title: pickLocale(service.title, language),
+        subtitle: pickLocale(service.kicker, language) || "—",
+        coverImage: service.cardImage || service.coverImage,
+        badge,
+        ctaLabel,
+    }))
 }
 
-function StackedItem({
-    index,
-    reduceMotion,
-    children,
-}: {
-    index: number
-    reduceMotion: boolean
-    children: ReactNode
-}) {
-    if (reduceMotion) {
-        return <li className="min-w-0">{children}</li>
+function normalizeTalleres(talleres: Taller[], language: Language, badge: string, ctaLabel: string): CardData[] {
+    return talleres.map((taller) => ({
+        id: taller.id,
+        href: `/talleres/${taller.slug}`,
+        title: taller.title,
+        subtitle: [formatTallerDate(taller.date, language), taller.cost].filter(Boolean).join(" · "),
+        coverImage: taller.coverImage,
+        badge,
+        ctaLabel,
+    }))
+}
+
+/** Título fijo (igual patrón que "Sobre mí") + tarjetas: carrusel deslizable hasta `lg`, grilla normal desde ahí. */
+function CardGroup({ heading, items }: { heading: string; items: CardData[] }) {
+    const [activeIndex, setActiveIndex] = useState(0)
+    const listRef = useRef<HTMLUListElement>(null)
+
+    /** La tarjeta activa es la que queda más cerca del centro del carrusel. */
+    const syncActive = () => {
+        const list = listRef.current
+        if (!list) return
+        const listRect = list.getBoundingClientRect()
+        const center = listRect.left + listRect.width / 2
+        let closest = 0
+        let smallest = Infinity
+        Array.from(list.children).forEach((card, index) => {
+            const rect = card.getBoundingClientRect()
+            const distance = Math.abs(rect.left + rect.width / 2 - center)
+            if (distance < smallest) {
+                smallest = distance
+                closest = index
+            }
+        })
+        setActiveIndex(closest)
     }
 
-    return (
-        <motion.li
-            className="min-w-0"
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.7, delay: Math.min(index, 2) * 0.08, ease: EASE_CONSULTORIO }}
-        >
-            {children}
-        </motion.li>
-    )
-}
+    const goTo = (index: number) => {
+        const list = listRef.current
+        const card = list?.children[index] as HTMLElement | undefined
+        if (!list || !card) return
+        const listRect = list.getBoundingClientRect()
+        const cardRect = card.getBoundingClientRect()
+        const delta = cardRect.left - listRect.left - (listRect.width - cardRect.width) / 2
+        list.scrollTo({ left: list.scrollLeft + delta, behavior: "smooth" })
+        setActiveIndex(index)
+    }
 
-function PinnedTrack({
-    services,
-    talleres,
-    language,
-    heading,
-    talleresHeading,
-}: {
-    services: Service[]
-    talleres: Taller[]
-    language: Language
-    heading: string
-    talleresHeading: string
-}) {
-    const wrapRef = useRef<HTMLDivElement>(null)
-    const viewportRef = useRef<HTMLDivElement>(null)
-    const [viewportW, setViewportW] = useState(0)
-    const visibleCards = useVisibleCards()
-
-    useLayoutEffect(() => {
-        const viewport = viewportRef.current
-        if (!viewport) return
-
-        const measure = () => setViewportW(viewport.clientWidth)
-        measure()
-        const observer = new ResizeObserver(measure)
-        observer.observe(viewport)
-        window.addEventListener("resize", measure)
-        return () => {
-            observer.disconnect()
-            window.removeEventListener("resize", measure)
-        }
-    }, [services.length, talleres.length])
-
-    const cardW = viewportW > 0 ? (viewportW - GAP * (visibleCards - 1)) / visibleCards : 320
-    const servicesExtra = extraTravel(services.length, cardW, visibleCards)
-    const talleresExtra = extraTravel(talleres.length, cardW, visibleCards)
-    const sectionSlide = services.length > 0 && talleres.length > 0 ? viewportW : 0
-    const totalTravel = servicesExtra + sectionSlide + talleresExtra
-    const pinVh =
-        viewportW > 0 && totalTravel > 0
-            ? 1 + (totalTravel / viewportW) * 1.15
-            : estimatedPinVh(services.length, talleres.length, visibleCards)
-
-    const { scrollYProgress } = useScroll({
-        target: wrapRef,
-        offset: ["start start", "end end"],
-    })
-
-    const xSection = useTransform(scrollYProgress, (value) => {
-        const point = value * totalTravel
-        const shift = Math.min(sectionSlide, Math.max(0, point - servicesExtra))
-        return `translate3d(${-shift}px, 0, 0)`
-    })
-    const xServices = useTransform(scrollYProgress, (value) => {
-        const point = value * totalTravel
-        return `translate3d(${-Math.min(servicesExtra, Math.max(0, point))}px, 0, 0)`
-    })
-    const xTalleres = useTransform(scrollYProgress, (value) => {
-        const point = value * totalTravel
-        const start = servicesExtra + sectionSlide
-        return `translate3d(${-Math.min(talleresExtra, Math.max(0, point - start))}px, 0, 0)`
-    })
-    const fieldScale = useTransform(scrollYProgress, [0, 1], [1.05, 1])
-
-    const headingOpacityServices = useTransform(scrollYProgress, (value) => {
-        if (sectionSlide <= 0) return services.length > 0 ? 1 : 0
-        const point = value * totalTravel
-        const start = servicesExtra
-        const end = servicesExtra + sectionSlide
-        if (point <= start) return 1
-        if (point >= end) return 0
-        return 1 - (point - start) / sectionSlide
-    })
-    const headingOpacityTalleres = useTransform(scrollYProgress, (value) => {
-        if (sectionSlide <= 0) return services.length === 0 && talleres.length > 0 ? 1 : 0
-        const point = value * totalTravel
-        const start = servicesExtra
-        const end = servicesExtra + sectionSlide
-        if (point <= start) return 0
-        if (point >= end) return 1
-        return (point - start) / sectionSlide
-    })
+    if (items.length === 0) return null
 
     return (
-        <div ref={wrapRef} className="relative" style={{ height: `calc(${pinVh} * 100vh)` }}>
-            <div className="sticky top-20 flex h-[calc(100svh-5rem)] flex-col overflow-hidden px-6 pb-8 pt-6 sm:px-10 sm:pb-10 sm:pt-8 lg:pb-12 lg:pt-10">
-                <motion.div className="absolute inset-0 origin-center" style={{ scale: fieldScale }}>
-                    <OrbitalField />
-                </motion.div>
-
-                <h2 className={sectionHeadingClassName("white", "relative shrink-0")}>
-                    <span className="sr-only">
-                        {heading}. {talleresHeading}
-                    </span>
-                    <span className="grid">
-                        <motion.span
-                            aria-hidden
-                            className="col-start-1 row-start-1"
-                            style={{ opacity: headingOpacityServices }}
-                        >
-                            {heading}
-                        </motion.span>
-                        <motion.span
-                            aria-hidden
-                            className="col-start-1 row-start-1"
-                            style={{ opacity: headingOpacityTalleres }}
-                        >
-                            {talleresHeading}
-                        </motion.span>
-                    </span>
-                </h2>
-
-                <div ref={viewportRef} className="relative mt-8 min-h-0 flex-1 overflow-hidden">
-                    <motion.div className="flex h-full" style={{ transform: xSection }}>
-                        {services.length > 0 ? (
-                            <Scene width={viewportW} stretch={visibleCards === 1}>
-                                <motion.div
-                                    className={`w-full ${visibleCards === 1 ? "h-full" : ""}`}
-                                    style={{ transform: xServices }}
-                                >
-                                    <CardStrip count={services.length} cardWidth={cardW} visibleCards={visibleCards}>
-                                        {services.map((service, index) => (
-                                            <li
-                                                key={service.id}
-                                                id={`svc-${service.slug}`}
-                                                className={`shrink-0 ${visibleCards === 1 ? "h-full" : ""}`}
-                                                style={{ width: cardW }}
-                                            >
-                                                <ServicePinCard
-                                                    service={service}
-                                                    language={language}
-                                                    index={index}
-                                                    progress={scrollYProgress}
-                                                    stretch={visibleCards === 1}
-                                                />
-                                            </li>
-                                        ))}
-                                    </CardStrip>
-                                </motion.div>
-                            </Scene>
-                        ) : null}
-
-                        {talleres.length > 0 ? (
-                            <Scene width={viewportW} stretch={visibleCards === 1}>
-                                <motion.div
-                                    className={`w-full ${visibleCards === 1 ? "h-full" : ""}`}
-                                    style={{ transform: xTalleres }}
-                                >
-                                    <CardStrip count={talleres.length} cardWidth={cardW} visibleCards={visibleCards}>
-                                        {talleres.map((taller) => (
-                                            <li
-                                                key={taller.id}
-                                                className={`shrink-0 ${visibleCards === 1 ? "h-full" : ""}`}
-                                                style={{ width: cardW }}
-                                            >
-                                                <TallerPinCard
-                                                    taller={taller}
-                                                    language={language}
-                                                    stretch={visibleCards === 1}
-                                                />
-                                            </li>
-                                        ))}
-                                    </CardStrip>
-                                </motion.div>
-                            </Scene>
-                        ) : null}
-                    </motion.div>
-                </div>
+        /* Al menos una pantalla, y el `pt` reserva el navbar para que el título fijo no se monte sobre las tarjetas. */
+        <div className="relative flex min-h-svh flex-col pt-19">
+            {/* `top-19` (76px), no `top-20`: el navbar mide 80px con el hamburguesa y 76px desde `lg`,
+                donde se oculta. Con 80 quedaban 4px transparentes en desktop; con 76 se mete bajo el
+                navbar opaco en móvil, que no se nota. El `z-20` lo deja por encima de los badges
+                (z-10), que al ir después en el DOM si no lo tapaban. */}
+            <div className="sticky top-19 z-20 bg-sage px-6 py-6 sm:px-10 lg:px-10">
+                <h2 className={sectionHeadingClassName("white")}>{heading}</h2>
             </div>
+
+            <div className="flex min-h-0 flex-1 items-center pb-6 lg:pb-16">
+                <ul
+                    ref={listRef}
+                    onScroll={syncActive}
+                    className="flex w-full snap-x snap-mandatory gap-6 overflow-x-auto px-6 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-10 lg:grid lg:grid-cols-3 lg:gap-8 lg:overflow-visible lg:snap-none lg:px-10 [&::-webkit-scrollbar]:hidden"
+                >
+                    {items.map((item) => (
+                        <li key={item.id} className="flex w-[82%] shrink-0 snap-center sm:w-[55%] lg:w-auto">
+                            <PinCard {...item} />
+                        </li>
+                    ))}
+                </ul>
+            </div>
+
+            {items.length > 1 && (
+                <div className="flex justify-center gap-1 pb-6 lg:hidden">
+                    {items.map((item, index) => (
+                        <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => goTo(index)}
+                            aria-label={item.title}
+                            aria-current={index === activeIndex}
+                            className="group flex h-10 w-8 items-center justify-center"
+                        >
+                            <span
+                                className={`h-2 w-2 rounded-full transition-all ${index === activeIndex ? "scale-125 bg-white" : "bg-white/40 group-hover:bg-white/70"
+                                    }`}
+                            />
+                        </button>
+                    ))}
+                </div>
+            )}
         </div>
     )
 }
 
-function Scene({ width, stretch, children }: { width: number; stretch?: boolean; children: ReactNode }) {
-    return (
-        <div
-            className={`flex h-full w-full shrink-0 ${stretch ? "items-stretch" : "items-center"}`}
-            style={{ width: width || "100%", minWidth: width || "100%" }}
-        >
-            <div className={`w-full ${stretch ? "h-full" : ""}`}>{children}</div>
-        </div>
-    )
-}
-
-function CardStrip({
-    count,
-    cardWidth,
-    visibleCards,
-    children,
-}: {
-    count: number
-    cardWidth: number
-    visibleCards: number
-    children: ReactNode
-}) {
-    const centered = count <= visibleCards
-    const width = count * cardWidth + Math.max(0, count - 1) * GAP
-    const stretch = visibleCards === 1
-
-    return (
-        <ul
-            className={`flex gap-6 ${stretch ? "h-full" : ""} ${centered ? "w-full justify-center" : ""}`}
-            style={centered ? undefined : { width }}
-        >
-            {children}
-        </ul>
-    )
-}
-
-function ServicePinCard({
-    service,
-    language,
-    index,
-    progress,
-    stretch,
-}: {
-    service: Service
-    language: Language
-    index: number
-    progress?: MotionValue<number>
-    stretch?: boolean
-}) {
-    const title = pickLocale(service.title, language)
-    const kicker = pickLocale(service.kicker, language)
-    const cardImage = service.cardImage || service.coverImage
-
+function PinCard({ href, title, subtitle, coverImage, badge, ctaLabel }: CardData) {
     return (
         <Link
-            href={`/servicios/${service.slug}`}
-            className="block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            href={href}
+            className="flex w-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
         >
-            <article className="flex h-full flex-col bg-sage-deep p-5 text-white">
-                <div className={stretch ? COVER_CLASS_STRETCH : COVER_CLASS}>
-                    {cardImage ? (
-                        progress ? (
-                            <ParallaxCover src={cardImage} alt={title} index={index} progress={progress} />
-                        ) : (
-                            <MediaImage src={cardImage} alt={title} sizes={CARD_IMAGE_SIZES} />
-                        )
+            <article className="flex flex-1 flex-col bg-sage-deep p-5 text-white">
+                <div className={COVER_CLASS}>
+                    <span className="absolute left-3 top-3 z-10 border border-white/40 bg-sage-deep px-3 py-1 text-xs font-medium text-white">
+                        {badge}
+                    </span>
+                    {coverImage ? (
+                        <MediaImage src={coverImage} alt={title} sizes={CARD_IMAGE_SIZES} />
                     ) : (
                         <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
                     )}
@@ -404,40 +197,10 @@ function ServicePinCard({
                 <h3 className="mt-5 line-clamp-2 font-serif text-[1.45rem] font-light italic leading-[1.15] text-white lg:text-[1.65rem]">
                     {title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/80">{kicker || "—"}</p>
-            </article>
-        </Link>
-    )
-}
-
-function TallerPinCard({
-    taller,
-    language,
-    stretch,
-}: {
-    taller: Taller
-    language: Language
-    stretch?: boolean
-}) {
-    const subtitle = [formatTallerDate(taller.date, language), taller.cost].filter(Boolean).join(" · ")
-
-    return (
-        <Link
-            href={`/talleres/${taller.slug}`}
-            className="block h-full focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-        >
-            <article className="flex h-full flex-col bg-sage-deep p-5 text-white">
-                <div className={stretch ? COVER_CLASS_STRETCH : COVER_CLASS}>
-                    {taller.coverImage ? (
-                        <MediaImage src={taller.coverImage} alt={taller.title} sizes={CARD_IMAGE_SIZES} />
-                    ) : (
-                        <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
-                    )}
-                </div>
-                <h3 className="mt-5 line-clamp-2 font-serif text-[1.45rem] font-light italic leading-[1.15] text-white lg:text-[1.65rem]">
-                    {taller.title}
-                </h3>
                 <p className="mt-2 text-sm leading-relaxed text-white/80">{subtitle}</p>
+                <span className="mt-4 inline-flex w-fit items-center gap-1 text-sm text-white/70">
+                    {ctaLabel} <span aria-hidden>→</span>
+                </span>
             </article>
         </Link>
     )
@@ -449,52 +212,6 @@ function formatTallerDate(date: string, language: Language) {
         month: "short",
         day: "numeric",
     })
-}
-
-function extraTravel(count: number, cardW: number, visibleCards: number) {
-    if (count <= visibleCards) return 0
-    return (count - visibleCards) * (cardW + GAP)
-}
-
-function estimatedPinVh(serviceCount: number, tallerCount: number, visibleCards: number) {
-    const panes = (serviceCount > 0 ? 1 : 0) + (tallerCount > 0 ? 1 : 0)
-    const extra = Math.max(0, serviceCount - visibleCards) + Math.max(0, tallerCount - visibleCards)
-    return Math.max(1, panes + extra * 0.45)
-}
-
-/** 1 tarjeta a la vez en mobile/tablet, 3 desde `lg` — el mismo umbral que el navbar. */
-function useVisibleCards() {
-    const [visible, setVisible] = useState(3)
-
-    useEffect(() => {
-        const media = window.matchMedia("(min-width: 1024px)")
-        const update = () => setVisible(media.matches ? 3 : 1)
-        update()
-        media.addEventListener("change", update)
-        return () => media.removeEventListener("change", update)
-    }, [])
-
-    return visible
-}
-
-function ParallaxCover({
-    src,
-    alt,
-    index,
-    progress,
-}: {
-    src: string
-    alt: string
-    index: number
-    progress: MotionValue<number>
-}) {
-    const x = useTransform(progress, [0, 1], [10 - index * 3, -16 - index * 5])
-
-    return (
-        <motion.div className="absolute inset-0" style={{ x }}>
-            <MediaImage src={src} alt={alt} className="scale-110" sizes={CARD_IMAGE_SIZES} />
-        </motion.div>
-    )
 }
 
 function OrbitalField() {

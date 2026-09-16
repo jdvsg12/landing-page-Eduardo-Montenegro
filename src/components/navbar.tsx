@@ -6,7 +6,6 @@ import { ChevronDown } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
 import { getTranslation, type Language } from "@/lib/translations"
 import { socialLinks, type SocialLink } from "@/lib/social-links"
-import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion"
 
 const languages: { code: Language; label: string }[] = [
     { code: "es", label: "ESP" },
@@ -17,6 +16,8 @@ const languages: { code: Language; label: string }[] = [
 const SCROLL_THRESHOLD = 50
 const HERO_OFFSET = 100
 const CONTACT_OFFSET = 100
+/** Ventana para descartar el click sintetizado que el touch dispara tras el touchend. */
+const GHOST_CLICK_MS = 400
 
 interface NavbarProps {
     /**
@@ -38,6 +39,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
     const { language, setLanguage } = useLanguage()
     const t = getTranslation(language)
     const menuButtonRef = useRef<HTMLButtonElement>(null)
+    const lastToggleRef = useRef(0)
     const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 })
 
     const anchor = (id: string) => (isPage ? `/#${id}` : `#${id}`)
@@ -125,9 +127,24 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
     }, [])
 
     const handleMenuToggle = () => {
+        /* En touch, el navegador sintetiza un `click` ~300ms después del `touchend`. Como esto es
+           un toggle, ese evento fantasma reabría el menú a mitad de la animación de salida: se
+           cerraba y medio segundo después reaparecía. Ignoramos disparos muy seguidos. */
+        const now = Date.now()
+        const desde = now - lastToggleRef.current
+        if (desde < GHOST_CLICK_MS) return
+        lastToggleRef.current = now
+
         updateButtonPosition()
-        setIsMobileMenuOpen(!isMobileMenuOpen)
+        setIsMobileMenuOpen((open) => !open)
     }
+
+    /* Cerrar también marca el guard: si no, el click fantasma que llega después de cerrar
+       con la X caía en el hamburguesa (que está encima) y lo reabría. */
+    const closeMenu = useCallback(() => {
+        lastToggleRef.current = Date.now()
+        setIsMobileMenuOpen(false)
+    }, [])
 
     const handleLanguageChange = (langCode: Language) => {
         setLanguage(langCode)
@@ -190,7 +207,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
 
             <MobileMenu
                 isOpen={isMobileMenuOpen}
-                onClose={() => setIsMobileMenuOpen(false)}
+                onClose={closeMenu}
                 buttonPosition={buttonPosition}
                 navLinks={navLinks}
                 socialLinks={socialLinks}
@@ -385,34 +402,20 @@ function MobileMenu({
     onLanguageChange,
     t
 }: MobileMenuProps) {
-    const reduceMotion = usePrefersReducedMotion()
-
     return (
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    initial={
-                        reduceMotion
-                            ? { opacity: 0 }
-                            : { clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }
-                    }
-                    animate={
-                        reduceMotion
-                            ? { opacity: 1 }
-                            : { clipPath: `circle(150% at ${buttonPosition.x}px ${buttonPosition.y}px)` }
-                    }
-                    exit={
-                        reduceMotion
-                            ? { opacity: 0 }
-                            : { clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }
-                    }
-                    transition={{ duration: reduceMotion ? 0.2 : 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
+                    animate={{ clipPath: `circle(150% at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
+                    exit={{ clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
+                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
                     className="fixed inset-0 z-[55] bg-ink lg:hidden"
                 >
                     <button
                         type="button"
                         onClick={onClose}
-                        className="absolute right-6 top-6 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white"
+                        className="absolute right-6 top-6 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white transition-transform hover:scale-110"
                         aria-label={t.nav.closeMenu}
                     >
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-neutral-900">
@@ -422,17 +425,25 @@ function MobileMenu({
 
                     <div className="flex h-dvh flex-col justify-between px-8 py-16">
                         <div>
-                            <a
+                            <motion.a
                                 href="#"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
                                 className="mb-8 block text-white"
                                 onClick={onClose}
                             >
                                 <span className="text-xl font-normal">Eduardo Montenegro</span>
-                            </a>
+                            </motion.a>
 
                             <ul className="mb-8 flex flex-col gap-6">
-                                {navLinks.map((link) => (
-                                    <li key={link.name}>
+                                {navLinks.map((link, index) => (
+                                    <motion.li
+                                        key={link.name}
+                                        initial={{ opacity: 0, x: -30 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.3 + index * 0.1 }}
+                                    >
                                         <a
                                             href={link.href}
                                             onClick={onClose}
@@ -440,13 +451,13 @@ function MobileMenu({
                                         >
                                             {link.name}
                                         </a>
-                                    </li>
+                                    </motion.li>
                                 ))}
                             </ul>
                         </div>
 
                         <div className="flex flex-col gap-8">
-                            <div>
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
                                 <h4 className="mb-4 text-sm font-medium uppercase tracking-wider text-neutral-500">{t.nav.contact}</h4>
                                 <a href="mailto:Contacto@eduardomontenegro.com" className="mb-2 block text-sm text-white hover:text-neutral-400">
                                     Contacto@eduardomontenegro.com
@@ -454,9 +465,9 @@ function MobileMenu({
                                 <a href="tel:+573142793431" className="block text-sm text-white hover:text-neutral-400">
                                     +57 314 279 3431
                                 </a>
-                            </div>
+                            </motion.div>
                             <div className="flex flex-row justify-between">
-                                <div>
+                                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
                                     <h4 className="mb-4 text-sm font-medium uppercase tracking-wider text-neutral-500">Social Media</h4>
                                     <ul className="flex flex-col gap-2">
                                         {socialLinks.map((link) => (
@@ -472,9 +483,14 @@ function MobileMenu({
                                             </li>
                                         ))}
                                     </ul>
-                                </div>
+                                </motion.div>
 
-                                <div className="col-span-2">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.7 }}
+                                    className="col-span-2"
+                                >
                                     <h4 className="mb-4 text-sm font-medium uppercase tracking-wider text-neutral-500">Language</h4>
                                     <div className="flex flex-col gap-4">
                                         {languages.map((lang) => (
@@ -490,7 +506,7 @@ function MobileMenu({
                                             </button>
                                         ))}
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
                         </div>
                     </div>

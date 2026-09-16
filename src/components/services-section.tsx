@@ -25,8 +25,11 @@ export function ServicesSection({
                 talleres={talleres}
                 language={language}
                 ctaLabel={t.services.viewService}
+                talleresCtaLabel={t.talleres.viewTaller}
                 heading={t.services.title}
                 talleresHeading={t.talleres.title}
+                serviceBadge={t.services.badge}
+                tallerBadge={t.talleres.badge}
             />
 
             {(loadError || services.length === 0) && (
