@@ -10,6 +10,7 @@ import { useLanguage } from "@/lib/language-context"
 import { getTranslation } from "@/lib/translations"
 import { pickLocale } from "@/lib/i18n-field"
 import type { Service } from "@/lib/services"
+import { PageContentBlocks } from "@/components/page-content-blocks"
 
 export function ServiceDetail({ service }: { service: Service }) {
     const { language } = useLanguage()
@@ -130,29 +131,16 @@ export function ServiceDetail({ service }: { service: Service }) {
             {/* El cuerpo comparte el eje izquierdo con el título de apertura */}
             <article className="mx-auto max-w-5xl px-6 pb-8 lg:px-8">
                 <div className="max-w-2xl space-y-7">
-                    {service.blocks.map((block, index) => {
-                        const content = pickLocale(block.content, language)
-                        if (!content) return null
-
-                        return block.type === "heading" ? (
-                            <h2
-                                key={index}
-                                className="pt-8 font-serif text-2xl font-light italic md:text-3xl"
-                            >
-                                {content}
-                            </h2>
-                        ) : (
-                            <p
-                                key={index}
-                                className="whitespace-pre-line text-base leading-[1.8] text-neutral-700"
-                            >
-                                {content}
-                            </p>
-                        )
-                    })}
+                    <PageContentBlocks
+                        blocks={service.blocks}
+                        language={language}
+                        fallbackAlt={title}
+                        headingClassName="pt-8 font-serif text-2xl font-light italic md:text-3xl"
+                        paragraphClassName="whitespace-pre-line text-base leading-[1.8] text-neutral-700"
+                    />
                 </div>
 
-                {service.images.length > 0 && (
+                {!service.blocks.some((block) => block.type === "image") && service.images.length > 0 && (
                     <div className="mt-16 grid max-w-3xl gap-4 sm:grid-cols-2">
                         {service.images.map((img, index) => (
                             <div key={index} className="relative aspect-[4/3] overflow-hidden">

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { getTallerBySlug, saveTaller, deleteTaller } from "@/lib/db-talleres"
 import { getSession } from "@/lib/auth"
+import { galleryFromBlocks, sanitizeContentBlocks } from "@/lib/content-blocks"
+import { sanitizeTallerI18n } from "@/lib/talleres"
 import { invalidBody, isCalendarDate, readJsonObject } from "@/lib/http"
 
 export async function GET(
@@ -41,6 +43,8 @@ export async function PUT(
   const text = (key: string, fallback: string) =>
     typeof body[key] === "string" && (body[key] as string).trim() ? (body[key] as string).trim() : fallback
 
+  const sanitizedBlocks = Array.isArray(body.blocks) ? sanitizeContentBlocks(body.blocks) : null
+
   const updated = {
     ...existing,
     title: text("title", existing.title),
@@ -48,8 +52,13 @@ export async function PUT(
     cost: text("cost", existing.cost),
     excerpt: text("excerpt", existing.excerpt),
     coverImage: typeof body.coverImage === "string" ? body.coverImage.trim() || undefined : existing.coverImage,
-    blocks: Array.isArray(body.blocks) ? body.blocks : existing.blocks,
-    images: Array.isArray(body.images) ? body.images : existing.images,
+    blocks: sanitizedBlocks ?? existing.blocks,
+    images: Array.isArray(body.images)
+      ? body.images
+      : sanitizedBlocks
+        ? galleryFromBlocks(sanitizedBlocks)
+        : existing.images,
+    i18n: body.i18n !== undefined ? sanitizeTallerI18n(body.i18n) : existing.i18n,
     published: typeof body.published === "boolean" ? body.published : existing.published,
     updatedAt: new Date().toISOString(),
   }

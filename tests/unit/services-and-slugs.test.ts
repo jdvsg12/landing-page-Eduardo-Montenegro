@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import { EMPTY_SERVICE_INPUT, sanitizeExternalUrl, serviceFieldsFromBody, type ServiceInput } from "@/lib/services"
 import { titleToSlug } from "@/lib/talleres"
 import { pickLocale } from "@/lib/i18n-field"
+import { mergeGalleryIntoBlocks, moveItemTo, sanitizeContentBlocks } from "@/lib/content-blocks"
 
 describe("titleToSlug", () => {
   it.each([
@@ -122,6 +123,7 @@ describe("serviceFieldsFromBody", () => {
       {
         blocks: [
           { type: "heading", content: { es: "Título" } },
+          { type: "image", url: "https://img.example/b.jpg", alt: { es: "Foto" } },
           { type: "script", content: { es: "x" } },
           "texto suelto",
           null,
@@ -130,11 +132,50 @@ describe("serviceFieldsFromBody", () => {
       },
       base
     )
-    expect(result.blocks).toEqual([{ type: "heading", content: { es: "Título" } }])
+    expect(result.blocks).toEqual([
+      { type: "heading", content: { es: "Título" } },
+      { type: "image", url: "https://img.example/b.jpg", alt: { es: "Foto" } },
+    ])
     expect(result.images).toEqual([{ url: "https://img.example/a.jpg", alt: "A" }])
   })
 
   it("si blocks no es una lista, conserva los anteriores", () => {
     expect(serviceFieldsFromBody({ blocks: "nada" }, base).blocks).toEqual(base.blocks)
+  })
+
+  it("si no mandan images, las deriva de los bloques imagen", () => {
+    const result = serviceFieldsFromBody(
+      {
+        blocks: [
+          { type: "paragraph", content: { es: "Hola" } },
+          { type: "image", url: "https://img.example/c.jpg", alt: { es: "C" } },
+        ],
+      },
+      base
+    )
+    expect(result.images).toEqual([{ url: "https://img.example/c.jpg", alt: "C" }])
+  })
+})
+
+describe("content blocks", () => {
+  it("acepta un párrafo viejo con content en texto plano", () => {
+    expect(sanitizeContentBlocks([{ type: "paragraph", content: "Hola" }])).toEqual([
+      { type: "paragraph", content: { es: "Hola" } },
+    ])
+  })
+
+  it("mete la galería al final si no hay bloques imagen", () => {
+    expect(
+      mergeGalleryIntoBlocks([{ type: "heading", content: { es: "Título" } }], [{ url: "https://x.com/a.jpg", alt: "A" }])
+    ).toEqual([
+      { type: "heading", content: { es: "Título" } },
+      { type: "image", url: "https://x.com/a.jpg", alt: { es: "A" } },
+    ])
+  })
+})
+
+describe("moveItemTo", () => {
+  it("mueve un elemento a otra posición", () => {
+    expect(moveItemTo(["a", "b", "c"], 0, 2)).toEqual(["b", "c", "a"])
   })
 })

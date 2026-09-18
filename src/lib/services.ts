@@ -1,14 +1,16 @@
 import { sanitizeLocalizedText, type LocalizedText } from "./i18n-field"
+import {
+  galleryFromBlocks,
+  sanitizeContentBlocks,
+  type ContentBlock,
+} from "./content-blocks"
 
 export interface ServiceImage {
   url: string
   alt?: string
 }
 
-export interface ServiceBlock {
-  type: "paragraph" | "heading"
-  content: LocalizedText
-}
+export type ServiceBlock = ContentBlock
 
 export interface Service {
   id: string
@@ -57,13 +59,7 @@ export function sanitizeExternalUrl(value: unknown): string | undefined {
 }
 
 function sanitizeBlocks(value: unknown): ServiceBlock[] | null {
-  if (!Array.isArray(value)) return null
-  return value.flatMap((block) => {
-    if (!block || typeof block !== "object") return []
-    const { type, content } = block as Record<string, unknown>
-    const localized = sanitizeLocalizedText(content)
-    return (type === "paragraph" || type === "heading") && localized ? [{ type, content: localized }] : []
-  })
+  return sanitizeContentBlocks(value)
 }
 
 function sanitizeImages(value: unknown): ServiceImage[] | null {
@@ -97,6 +93,10 @@ export function serviceFieldsFromBody(
     return typeof value === "string" ? value.trim() || undefined : fallback
   }
   const position = Number(body.position)
+  const blocks = sanitizeBlocks(body.blocks) ?? base.blocks
+  const images =
+    sanitizeImages(body.images) ??
+    (body.blocks !== undefined ? galleryFromBlocks(blocks) : base.images)
 
   return {
     title: localized("title", base.title),
@@ -104,8 +104,8 @@ export function serviceFieldsFromBody(
     excerpt: localized("excerpt", base.excerpt),
     cardImage: text("cardImage", base.cardImage),
     coverImage: text("coverImage", base.coverImage),
-    blocks: sanitizeBlocks(body.blocks) ?? base.blocks,
-    images: sanitizeImages(body.images) ?? base.images,
+    blocks,
+    images,
     showWhatsapp: bool("showWhatsapp", base.showWhatsapp),
     whatsapp: text("whatsapp", base.whatsapp),
     waMessage: localized("waMessage", base.waMessage),

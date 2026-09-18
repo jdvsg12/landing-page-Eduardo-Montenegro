@@ -2,24 +2,26 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import type { Service, ServiceBlock, ServiceImage } from "@/lib/services"
+import type { Service, ServiceBlock } from "@/lib/services"
 import type { LocalizedText } from "@/lib/i18n-field"
 import { emptyLocalizedText } from "@/lib/i18n-field"
+import { galleryFromBlocks, mergeGalleryIntoBlocks } from "@/lib/content-blocks"
+import { isImageBlock } from "@/lib/content-blocks"
 import { titleToSlug } from "@/lib/talleres"
 import type { Language } from "@/lib/translations"
+import { ContentBlocksEditor } from "@/components/admin/ContentBlocksEditor"
+import { AiTranslateButton, useAiTranslate } from "@/components/admin/AiTranslateButton"
 import {
   Checkbox,
   FallbackHint,
   Field,
   ImageField,
-  ListControls,
   LocaleSwitcher,
   Panel,
   VisibilityToggle,
   buttonClass,
   inputClass,
   missingLocales,
-  moveItem,
   primaryButtonClass,
 } from "@/components/admin/admin-ui"
 
@@ -50,8 +52,9 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
   const [excerpt, setExcerpt] = useState<LocalizedText>(initialData?.excerpt ?? emptyLocalizedText())
   const [cardImage, setCardImage] = useState(initialData?.cardImage ?? "")
   const [coverImage, setCoverImage] = useState(initialData?.coverImage ?? "")
-  const [blocks, setBlocks] = useState<ServiceBlock[]>(initialData?.blocks ?? [])
-  const [images, setImages] = useState<ServiceImage[]>(initialData?.images ?? [])
+  const [blocks, setBlocks] = useState<ServiceBlock[]>(
+    mergeGalleryIntoBlocks(initialData?.blocks ?? [], initialData?.images ?? [])
+  )
   const [showWhatsapp, setShowWhatsapp] = useState(initialData?.showWhatsapp ?? true)
   // Un servicio nuevo arranca con el WhatsApp del consultorio para que el botón por defecto funcione.
   const [whatsapp, setWhatsapp] = useState(initialData?.whatsapp ?? (mode === "create" ? DEFAULT_WHATSAPP : ""))
@@ -69,6 +72,7 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
+  const { translate, translating, error: translateError, setError: setTranslateError } = useAiTranslate()
 
   const slug = mode === "create" ? titleToSlug(title.es ?? "") : (initialData?.slug ?? "")
 
@@ -77,11 +81,45 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
     value: string
   ) => setter((prev) => ({ ...prev, [locale]: value }))
 
-  const updateBlock = (index: number, patch: Partial<ServiceBlock>) =>
-    setBlocks(blocks.map((b, i) => (i === index ? { ...b, ...patch } : b)))
+  const applyLocalePatch = (field: LocalizedText, key: string, en: Record<string, string>, fr: Record<string, string>) => ({
+    ...field,
+    en: en[key] ?? field.en,
+    fr: fr[key] ?? field.fr,
+  })
 
-  const updateImage = (index: number, patch: Partial<ServiceImage>) =>
-    setImages(images.map((img, i) => (i === index ? { ...img, ...patch } : img)))
+  const handleAiTranslate = async () => {
+    setTranslateError("")
+    const fields: Record<string, string> = {}
+    if (title.es?.trim()) fields.title = title.es
+    if (kicker.es?.trim()) fields.kicker = kicker.es
+    if (excerpt.es?.trim()) fields.excerpt = excerpt.es
+    if (waMessage.es?.trim()) fields.waMessage = waMessage.es
+    if (registrationLabel.es?.trim()) fields.registrationLabel = registrationLabel.es
+    blocks.forEach((block, index) => {
+      if (isImageBlock(block)) {
+        if (block.alt.es?.trim()) fields[`block-${index}-alt`] = block.alt.es
+        return
+      }
+      if (block.content.es?.trim()) fields[`block-${index}`] = block.content.es
+    })
+    const result = await translate(fields)
+    if (!result) return
+    const { en, fr } = result
+    setTitle((prev) => applyLocalePatch(prev, "title", en, fr))
+    setKicker((prev) => applyLocalePatch(prev, "kicker", en, fr))
+    setExcerpt((prev) => applyLocalePatch(prev, "excerpt", en, fr))
+    setWaMessage((prev) => applyLocalePatch(prev, "waMessage", en, fr))
+    setRegistrationLabel((prev) => applyLocalePatch(prev, "registrationLabel", en, fr))
+    setBlocks((prev) =>
+      prev.map((block, index) => {
+        if (isImageBlock(block)) {
+          return { ...block, alt: applyLocalePatch(block.alt, `block-${index}-alt`, en, fr) }
+        }
+        return { ...block, content: applyLocalePatch(block.content, `block-${index}`, en, fr) }
+      })
+    )
+    setLocale("en")
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -112,7 +150,7 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
       cardImage,
       coverImage,
       blocks,
-      images: images.filter((img) => img.url),
+      images: galleryFromBlocks(blocks),
       showWhatsapp,
       whatsapp,
       waMessage,
@@ -160,12 +198,23 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
 
   return (
     // noValidate: los errores los muestra el formulario, en español y en un solo lugar.
-    <form onSubmit={handleSubmit} noValidate className="space-y-6">
-      <LocaleSwitcher locale={locale} onChange={setLocale} missing={missingLocales([title, kicker, excerpt])} />
+    <form onSubmit={handleSubmit} noValidate className="space-y-6 pb-24">
+      <LocaleSwitcher
+        locale={locale}
+        onChange={setLocale}
+        missing={missingLocales([
+          title,
+          kicker,
+          excerpt,
+          waMessage,
+          registrationLabel,
+          ...blocks.flatMap((block) => (isImageBlock(block) ? [block.alt] : [block.content])),
+        ])}
+      />
 
-      {error && (
+      {(error || translateError) && (
         <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {error}
+          {error || translateError}
         </p>
       )}
 
@@ -341,86 +390,26 @@ export function ServiceForm({ initialData, mode }: ServiceFormProps) {
         </div>
       </Panel>
 
-      <Panel title={`Contenido de la página interna (${L})`}>
-        {blocks.length === 0 && <p className="text-sm text-neutral-500">Todavía no hay bloques de contenido.</p>}
-        {blocks.map((block, index) => (
-          <div key={index} className="border border-neutral-200 p-3">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <select
-                value={block.type}
-                onChange={(e) => updateBlock(index, { type: e.target.value as ServiceBlock["type"] })}
-                className="border border-neutral-300 bg-white px-2 py-1 text-sm text-neutral-700 focus:border-ink focus:outline-none"
-              >
-                <option value="heading">Título</option>
-                <option value="paragraph">Párrafo</option>
-              </select>
-              <ListControls
-                label="bloque"
-                onUp={() => setBlocks(moveItem(blocks, index, -1))}
-                onDown={() => setBlocks(moveItem(blocks, index, 1))}
-                onRemove={() => setBlocks(blocks.filter((_, i) => i !== index))}
-                disableUp={index === 0}
-                disableDown={index === blocks.length - 1}
-              />
-            </div>
-            <textarea
-              value={block.content[locale] ?? ""}
-              onChange={(e) => updateBlock(index, { content: { ...block.content, [locale]: e.target.value } })}
-              rows={block.type === "heading" ? 1 : 4}
-              className={`${inputClass} ${block.type === "heading" ? "text-lg font-medium" : "text-sm leading-relaxed"}`}
-            />
-          </div>
-        ))}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => setBlocks([...blocks, { type: "paragraph", content: emptyLocalizedText() }])}
-            className={buttonClass}
-          >
-            + Párrafo
-          </button>
-          <button
-            type="button"
-            onClick={() => setBlocks([...blocks, { type: "heading", content: emptyLocalizedText() }])}
-            className={buttonClass}
-          >
-            + Título
-          </button>
-        </div>
-      </Panel>
-
-      <Panel title="Imágenes adicionales" description="Galería al final del contenido.">
-        {images.map((img, index) => (
-          <div key={index} className="flex items-start gap-3 border border-neutral-200 p-3">
-            <div className="min-w-0 flex-1 space-y-2">
-              <ImageField
-                label={`Imagen ${index + 1}`}
-                value={img.url}
-                onChange={(url) => updateImage(index, { url })}
-                prefix="services/blocks"
-                previewClassName="h-28 w-40 object-cover"
-              />
-              <input
-                type="text"
-                value={img.alt ?? ""}
-                onChange={(e) => updateImage(index, { alt: e.target.value })}
-                placeholder="Texto alternativo (describe la imagen)"
-                className={`${inputClass} text-sm`}
-              />
-            </div>
-            <ListControls
-              label="imagen"
-              onUp={() => setImages(moveItem(images, index, -1))}
-              onDown={() => setImages(moveItem(images, index, 1))}
-              onRemove={() => setImages(images.filter((_, i) => i !== index))}
-              disableUp={index === 0}
-              disableDown={index === images.length - 1}
-            />
-          </div>
-        ))}
-        <button type="button" onClick={() => setImages([...images, { url: "", alt: "" }])} className={buttonClass}>
-          + Agregar imagen
-        </button>
+      <Panel
+        title={`Contenido de la página interna (${L})`}
+        description="Títulos, párrafos e imágenes en el orden en que se verán. Usa el menú de posición para reordenar."
+        actions={
+          <AiTranslateButton
+            onClick={handleAiTranslate}
+            busy={translating}
+            disabled={!title.es?.trim()}
+          />
+        }
+      >
+        <p className="text-xs text-neutral-500">
+          Completa el español y pulsa “Autocompletar con IA” para rellenar inglés y francés sin perder el orden de los bloques.
+        </p>
+        <ContentBlocksEditor
+          blocks={blocks}
+          onChange={setBlocks}
+          locale={locale}
+          uploadPrefix="services/blocks"
+        />
       </Panel>
 
       <div className="sticky bottom-0 z-20 -mx-4 flex justify-end gap-3 border-t border-neutral-200 bg-paper/95 px-4 py-4 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">

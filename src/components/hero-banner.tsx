@@ -71,8 +71,8 @@ export function HeroBanner({ content }: { content: HeroContent }) {
                             />
                         </div>
 
-                        <div className="clip-reveal-hero z-20 max-w-[min(100%,22rem)] px-1 text-center lg:max-w-none lg:text-left">
-                            <h1 className="mb-3 text-balance text-[clamp(1.45rem,6.2vw,2.5rem)] font-medium leading-[1.15] tracking-wide text-white underline decoration-1 underline-offset-[0.35em] md:text-[40px]">
+                        <div className="clip-reveal-hero z-20 mt-[5rem] max-w-[min(100%,22rem)] px-1 text-center lg:mt-0 lg:max-w-none lg:text-left">
+                            <h1 className="mb-3 text-balance text-[clamp(1.45rem,6.2vw,2.5rem)] font-medium leading-[4rem] tracking-wide text-white underline decoration-2 underline-offset-[0.4rem] md:text-[40px]">
                                 {title}
                             </h1>
                             <p className="text-pretty text-base leading-snug text-white/90 sm:text-xl md:text-2xl">{subtitle}</p>

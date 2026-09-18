@@ -29,3 +29,16 @@ export function sanitizeLocalizedText(value: unknown): LocalizedText | null {
 export function emptyLocalizedText(): LocalizedText {
   return { es: "", en: "", fr: "" }
 }
+
+/** Acepta el objeto por idioma o un texto suelto (contenido viejo). */
+export function coerceLocalizedText(value: unknown): LocalizedText {
+  if (typeof value === "string") return { es: value }
+  return sanitizeLocalizedText(value) ?? emptyLocalizedText()
+}
+
+export function mergeLocalized(
+  current: LocalizedText,
+  patch: Partial<Record<Language, string>>
+): LocalizedText {
+  return { ...current, ...patch }
+}

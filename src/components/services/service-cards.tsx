@@ -5,7 +5,7 @@ import Link from "next/link"
 import { pickLocale } from "@/lib/i18n-field"
 import { dateLocale } from "@/lib/language"
 import type { Service } from "@/lib/services"
-import type { Taller } from "@/lib/talleres"
+import { pickTallerText, type Taller } from "@/lib/talleres"
 import type { Language } from "@/lib/translations"
 import { MediaImage } from "@/components/media-image"
 import { sectionHeadingClassName } from "@/components/section-heading"
@@ -84,8 +84,8 @@ function normalizeTalleres(talleres: Taller[], language: Language, badge: string
     return talleres.map((taller) => ({
         id: taller.id,
         href: `/talleres/${taller.slug}`,
-        title: taller.title,
-        subtitle: [formatTallerDate(taller.date, language), taller.cost].filter(Boolean).join(" · "),
+        title: pickTallerText(taller.title, taller.i18n?.title, language),
+        subtitle: [formatTallerDate(taller.date, language), pickTallerText(taller.cost, taller.i18n?.cost, language)].filter(Boolean).join(" · "),
         coverImage: taller.coverImage,
         badge,
         ctaLabel,

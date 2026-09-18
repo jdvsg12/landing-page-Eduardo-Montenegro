@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { revalidatePath } from "next/cache"
 import { getAllTalleres, getPublishedTalleres, getTallerBySlug, saveTaller } from "@/lib/db-talleres"
-import { titleToSlug } from "@/lib/talleres"
-import type { Taller } from "@/lib/talleres"
+import { titleToSlug, sanitizeTallerI18n, type Taller } from "@/lib/talleres"
+import { galleryFromBlocks, sanitizeContentBlocks } from "@/lib/content-blocks"
 import { getSession } from "@/lib/auth"
 import { invalidBody, isCalendarDate, readJsonObject } from "@/lib/http"
 
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
   const body = await readJsonObject(request)
   if (!body) return invalidBody()
-  const { title, date, cost, excerpt, coverImage, blocks, images, published } = body
+  const { title, date, cost, excerpt, coverImage, blocks, images, published, i18n } = body
 
   const text = (value: unknown) => (typeof value === "string" ? value.trim() : "")
   if (!text(title) || !text(cost) || !text(excerpt) || !date) {
@@ -50,8 +50,9 @@ export async function POST(request: Request) {
     cost: text(cost),
     excerpt: text(excerpt),
     coverImage: text(coverImage) || undefined,
-    blocks: Array.isArray(blocks) ? blocks : [],
-    images: Array.isArray(images) ? images : [],
+    blocks: sanitizeContentBlocks(blocks) ?? [],
+    images: Array.isArray(images) ? images : galleryFromBlocks(sanitizeContentBlocks(blocks) ?? []),
+    i18n: sanitizeTallerI18n(i18n),
     published: typeof published === "boolean" ? published : true,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

@@ -113,7 +113,10 @@ bun install
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 RESEND_API_KEY=your_resend_api_key
+GEMINI_API_KEY=your_gemini_api_key
 ```
+
+Gemini se usa **solo** al pulsar «Autocompletar con IA» en el admin de talleres y servicios. Crea la clave en [Google AI Studio](https://aistudio.google.com/apikey), pégala en `.env.local` y reinicia `pnpm dev`. En Vercel: Settings → Environment Variables → `GEMINI_API_KEY` (Production / Preview / Development) y vuelve a desplegar.
 
 4. **Run development server**
 

@@ -1,5 +1,6 @@
 import { createSql } from "./db"
 import type { LocalizedText } from "./i18n-field"
+import { sanitizeContentBlocks } from "./content-blocks"
 import type { Service } from "./services"
 
 const sql = createSql()
@@ -76,7 +77,7 @@ function mapRowToService(row: Record<string, unknown>): Service {
     excerpt: row.excerpt as LocalizedText,
     cardImage: (row.card_image as string) || undefined,
     coverImage: (row.cover_image as string) || undefined,
-    blocks: row.blocks as Service["blocks"],
+    blocks: sanitizeContentBlocks(row.blocks) ?? [],
     images: row.images as Service["images"],
     showWhatsapp: (row.show_whatsapp as boolean | null) ?? row.cta_type === "whatsapp",
     whatsapp: (row.whatsapp as string) || undefined,

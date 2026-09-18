@@ -40,6 +40,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
     const t = getTranslation(language)
     const menuButtonRef = useRef<HTMLButtonElement>(null)
     const lastToggleRef = useRef(0)
+    const isMenuClosingRef = useRef(false)
     const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 })
 
     const anchor = (id: string) => (isPage ? `/#${id}` : `#${id}`)
@@ -130,20 +131,32 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
         /* En touch, el navegador sintetiza un `click` ~300ms después del `touchend`. Como esto es
            un toggle, ese evento fantasma reabría el menú a mitad de la animación de salida: se
            cerraba y medio segundo después reaparecía. Ignoramos disparos muy seguidos. */
+        if (isMenuClosingRef.current) return
         const now = Date.now()
         const desde = now - lastToggleRef.current
         if (desde < GHOST_CLICK_MS) return
         lastToggleRef.current = now
 
+        if (isMobileMenuOpen) {
+            isMenuClosingRef.current = true
+            setIsMobileMenuOpen(false)
+            return
+        }
+
         updateButtonPosition()
-        setIsMobileMenuOpen((open) => !open)
+        setIsMobileMenuOpen(true)
     }
 
     /* Cerrar también marca el guard: si no, el click fantasma que llega después de cerrar
        con la X caía en el hamburguesa (que está encima) y lo reabría. */
     const closeMenu = useCallback(() => {
         lastToggleRef.current = Date.now()
+        isMenuClosingRef.current = true
         setIsMobileMenuOpen(false)
+    }, [])
+
+    const handleMenuExitComplete = useCallback(() => {
+        isMenuClosingRef.current = false
     }, [])
 
     const handleLanguageChange = (langCode: Language) => {
@@ -208,6 +221,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
             <MobileMenu
                 isOpen={isMobileMenuOpen}
                 onClose={closeMenu}
+                onExitComplete={handleMenuExitComplete}
                 buttonPosition={buttonPosition}
                 navLinks={navLinks}
                 socialLinks={socialLinks}
@@ -384,6 +398,7 @@ MobileMenuButton.displayName = "MobileMenuButton"
 interface MobileMenuProps {
     isOpen: boolean
     onClose: () => void
+    onExitComplete: () => void
     buttonPosition: { x: number; y: number }
     navLinks: Array<{ name: string; href: string }>
     socialLinks: SocialLink[]
@@ -392,9 +407,14 @@ interface MobileMenuProps {
     t: any
 }
 
+function menuCircle(radius: string, origin: { x: number; y: number }) {
+    return `circle(${radius} at ${origin.x}px ${origin.y}px)`
+}
+
 function MobileMenu({
     isOpen,
     onClose,
+    onExitComplete,
     buttonPosition,
     navLinks,
     socialLinks,
@@ -402,15 +422,47 @@ function MobileMenu({
     onLanguageChange,
     t
 }: MobileMenuProps) {
+    const [isShown, setIsShown] = useState(false)
+    const [isExpanded, setIsExpanded] = useState(false)
+    const [isParked, setIsParked] = useState(false)
+    const originRef = useRef(buttonPosition)
+    const isClosingRef = useRef(false)
+
+    useEffect(() => {
+        if (isOpen) {
+            isClosingRef.current = false
+            originRef.current = buttonPosition
+            setIsParked(false)
+            setIsShown(true)
+            return
+        }
+        isClosingRef.current = true
+        setIsExpanded(false)
+    }, [isOpen, buttonPosition])
+
+    useEffect(() => {
+        if (!isShown || !isOpen) return
+        const frame = requestAnimationFrame(() => setIsExpanded(true))
+        return () => cancelAnimationFrame(frame)
+    }, [isShown, isOpen])
+
+    if (!isShown) return null
+
+    const origin = originRef.current
+    const clipPath = isExpanded ? menuCircle("150%", origin) : menuCircle("0%", origin)
+
     return (
-        <AnimatePresence>
-            {isOpen && (
                 <motion.div
-                    initial={{ clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
-                    animate={{ clipPath: `circle(150% at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
-                    exit={{ clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
+                    initial={false}
+                    animate={{ clipPath }}
                     transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                    className="fixed inset-0 z-[55] bg-ink lg:hidden"
+                    onAnimationComplete={() => {
+                        if (!isClosingRef.current) return
+                        setIsParked(true)
+                        onExitComplete()
+                    }}
+                    aria-hidden={!isExpanded}
+                    className={`fixed inset-0 z-[55] overflow-hidden bg-ink lg:hidden ${isParked ? "invisible pointer-events-none" : ""}`}
                 >
                     <button
                         type="button"
@@ -511,7 +563,5 @@ function MobileMenu({
                         </div>
                     </div>
                 </motion.div>
-            )}
-        </AnimatePresence>
     )
 }
