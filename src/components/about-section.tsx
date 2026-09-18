@@ -1,53 +1,69 @@
 "use client"
 
-import { motion } from "motion/react"
 import { useLanguage } from "@/lib/language-context"
-import { getTranslation } from "@/lib/translations"
+import { pickLocale } from "@/lib/i18n-field"
+import type { AboutContent } from "@/lib/site-content"
+import { SectionHeading } from "@/components/section-heading"
 
-export function AboutSection() {
+type Block = {
+    title: string
+    paragraphs: string[]
+}
+
+function splitParagraphs(text: string) {
+    return text
+        .split(/\n\s*\n/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+}
+
+export function AboutSection({ content }: { content: AboutContent }) {
     const { language } = useLanguage()
-    const t = getTranslation(language)
+
+    const screens: Block[][] = content.screens
+        .map((screen) =>
+            screen.blocks
+                .map((block) => ({
+                    title: pickLocale(block.title, language),
+                    paragraphs: splitParagraphs(pickLocale(block.body, language)),
+                }))
+                .filter((block) => block.title || block.paragraphs.length > 0)
+        )
+        .filter((blocks) => blocks.length > 0)
 
     return (
-        <section id="about" className="relative z-10 bg-background py-24 lg:py-32">
-            <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-24 lg:pb-14">
-                <div className="grid items-start gap-8 lg:grid-cols-[2fr_1fr] lg:gap-12">
-                    <motion.div
-                        initial={{ opacity: 0, x: -60 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className="thin-scrollbar order-2 max-h-[60vh] overflow-y-auto pr-4 lg:order-1"
-                    >
-                        <div className="mb-12">
-                            <p className="text-lg leading-relaxed text-muted-foreground whitespace-pre-line">
-                                {t.about.description}
-                            </p>
-                        </div>
+        <section id="about" className="relative scroll-mt-20 bg-paper">
+            <div className="lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+                <aside className="sticky top-20 z-10 flex flex-col justify-center border-b border-sage/30 bg-paper px-6 py-8 sm:px-10 sm:py-10 lg:top-0 lg:h-svh lg:border-b-0 lg:border-r lg:px-16 lg:py-16 xl:px-24">
+                    <SectionHeading className="max-w-[8ch]">{pickLocale(content.title, language)}</SectionHeading>
+                </aside>
 
-                        <div>
-                            <h3 className="mb-4 text-xl font-semibold text-foreground whitespace-nowrap">
-                                {t.profile.title}
-                            </h3>
-                            <p className="text-lg leading-relaxed text-muted-foreground whitespace-pre-line">
-                                {t.profile.description}
-                            </p>
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 60 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                        className="order-1 lg:order-2"
-                    >
-                        <h2 className="text-right font-serif">
-                            <span className="text-6xl font-bold text-muted-foreground/50 lg:text-8xl">
-                                {t.about.title}
-                            </span>
-                        </h2>
-                    </motion.div>
+                <div>
+                    {screens.map((blocks, screenIndex) => (
+                        <article
+                            key={screenIndex}
+                            className={`flex flex-col justify-center px-6 py-14 sm:px-10 sm:py-20 lg:min-h-svh lg:px-16 xl:px-24 ${
+                                screenIndex < screens.length - 1 ? "border-b border-sage/30" : ""
+                            }`}
+                        >
+                            {blocks.map((block, blockIndex) => (
+                                <div key={blockIndex} className={blockIndex > 0 ? "mt-12" : ""}>
+                                    {block.title ? (
+                                        <h3 className="font-serif text-[clamp(2rem,4.5vw,3.5rem)] font-light italic leading-[1.1] text-sage-ink">
+                                            {block.title}
+                                        </h3>
+                                    ) : null}
+                                    <div className={`max-w-[38rem] space-y-5 ${block.title ? "mt-6" : "mt-8"}`}>
+                                        {block.paragraphs.map((paragraph, paragraphIndex) => (
+                                            <p key={paragraphIndex} className="text-lg leading-[1.7] text-ink">
+                                                {paragraph}
+                                            </p>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </article>
+                    ))}
                 </div>
             </div>
         </section>

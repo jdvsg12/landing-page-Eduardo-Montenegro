@@ -3,6 +3,7 @@
 import React from "react"
 import { motion, type Variants, useInView, useAnimation } from "motion/react"
 import { useRef, useEffect } from "react"
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -34,6 +35,7 @@ export function TextAnimate({
     const controls = useAnimation()
     const ref = useRef(null)
     const isInView = useInView(ref, { once })
+    const reduceMotion = usePrefersReducedMotion()
 
     const text = children
 
@@ -125,6 +127,15 @@ export function TextAnimate({
     }, [isInView, controls, startOnView, once])
 
     const MotionComponent = motion[Component as keyof typeof motion] as any
+
+    if (reduceMotion) {
+        const StaticComponent = Component as React.ElementType
+        return (
+            <StaticComponent ref={ref} className={cn(className)}>
+                {text}
+            </StaticComponent>
+        )
+    }
 
     return (
         <MotionComponent

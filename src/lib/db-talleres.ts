@@ -1,7 +1,8 @@
-import { neon } from "@neondatabase/serverless"
-import type { Taller } from "./talleres"
+import { createSql } from "./db"
+import { sanitizeContentBlocks } from "./content-blocks"
+import { sanitizeTallerI18n, type Taller } from "./talleres"
 
-const sql = neon(process.env.POSTGRES_URL!)
+const sql = createSql()
 
 let initPromise: Promise<void> | null = null
 
@@ -21,10 +22,15 @@ async function ensureTable() {
         created_at  TIMESTAMPTZ DEFAULT NOW(),
         updated_at  TIMESTAMPTZ DEFAULT NOW()
       );
-    `.then(() => {}).catch((err) => {
-      console.error("Failed to initialize talleres table:", err)
-      throw err
-    })
+    `
+      .then(() => sql`ALTER TABLE talleres ADD COLUMN IF NOT EXISTS published BOOLEAN NOT NULL DEFAULT TRUE`)
+      .then(() => sql`ALTER TABLE talleres ADD COLUMN IF NOT EXISTS i18n JSONB NOT NULL DEFAULT '{}'`)
+      .then(() => {})
+      .catch((err) => {
+        console.error("Failed to initialize talleres table:", err)
+        initPromise = null
+        throw err
+      })
   }
   await initPromise
 }
@@ -37,9 +43,11 @@ function mapRowToTaller(row: Record<string, unknown>): Taller {
     date: row.date as string,
     cost: row.cost as string,
     excerpt: row.excerpt as string,
+    i18n: sanitizeTallerI18n(row.i18n),
     coverImage: (row.cover_image as string) || undefined,
-    blocks: row.blocks as Taller["blocks"],
-    images: row.images as Taller["images"],
+    blocks: sanitizeContentBlocks(row.blocks) ?? [],
+    images: (Array.isArray(row.images) ? row.images : []) as Taller["images"],
+    published: row.published !== false,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   }
@@ -49,6 +57,14 @@ export async function getAllTalleres(): Promise<Taller[]> {
   await ensureTable()
   const rows = await sql`
     SELECT * FROM talleres ORDER BY date DESC
+  `
+  return rows.map(mapRowToTaller)
+}
+
+export async function getPublishedTalleres(): Promise<Taller[]> {
+  await ensureTable()
+  const rows = await sql`
+    SELECT * FROM talleres WHERE published = TRUE ORDER BY date DESC
   `
   return rows.map(mapRowToTaller)
 }
@@ -64,7 +80,7 @@ export async function getTallerBySlug(slug: string): Promise<Taller | null> {
 export async function saveTaller(taller: Taller): Promise<void> {
   await ensureTable()
   await sql`
-    INSERT INTO talleres (id, slug, title, date, cost, excerpt, cover_image, blocks, images, created_at, updated_at)
+    INSERT INTO talleres (id, slug, title, date, cost, excerpt, cover_image, blocks, images, i18n, published, created_at, updated_at)
     VALUES (
       ${taller.id},
       ${taller.slug},
@@ -75,6 +91,8 @@ export async function saveTaller(taller: Taller): Promise<void> {
       ${taller.coverImage ?? ""},
       ${JSON.stringify(taller.blocks)}::jsonb,
       ${JSON.stringify(taller.images)}::jsonb,
+      ${JSON.stringify(taller.i18n ?? {})}::jsonb,
+      ${taller.published},
       ${taller.createdAt},
       ${taller.updatedAt}
     )
@@ -86,6 +104,8 @@ export async function saveTaller(taller: Taller): Promise<void> {
       cover_image = EXCLUDED.cover_image,
       blocks      = EXCLUDED.blocks,
       images      = EXCLUDED.images,
+      i18n        = EXCLUDED.i18n,
+      published   = EXCLUDED.published,
       updated_at  = EXCLUDED.updated_at
   `
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef, useCallback } from "react"
+import React, { useState, useEffect, useRef, useCallback } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { ChevronDown } from "lucide-react"
 import { useLanguage } from "@/lib/language-context"
@@ -16,9 +16,20 @@ const languages: { code: Language; label: string }[] = [
 const SCROLL_THRESHOLD = 50
 const HERO_OFFSET = 100
 const CONTACT_OFFSET = 100
-const SERVICES_OFFSET = 100
+/** Ventana para descartar el click sintetizado que el touch dispara tras el touchend. */
+const GHOST_CLICK_MS = 400
 
-export function Navbar() {
+interface NavbarProps {
+    /**
+     * "page" para las páginas internas: no hay hero ni secciones que observar,
+     * así que el fondo va sólido, el texto oscuro y los enlaces apuntan a la
+     * home con ancla en vez de a un ancla local que no existe.
+     */
+    variant?: "home" | "page"
+}
+
+export function Navbar({ variant = "home" }: NavbarProps = {}) {
+    const isPage = variant === "page"
     const [isScrolled, setIsScrolled] = useState(false)
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
     const [isLangMenuOpen, setIsLangMenuOpen] = useState(false)
@@ -28,13 +39,17 @@ export function Navbar() {
     const { language, setLanguage } = useLanguage()
     const t = getTranslation(language)
     const menuButtonRef = useRef<HTMLButtonElement>(null)
+    const lastToggleRef = useRef(0)
+    const isMenuClosingRef = useRef(false)
     const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 })
 
+    const anchor = (id: string) => (isPage ? `/#${id}` : `#${id}`)
+
     const navLinks = [
-        { name: t.nav.about, href: "#about" },
-        { name: t.nav.services, href: "#services" },
-        { name: t.nav.faq, href: "#faq" },
-        { name: t.nav.contact, href: "#contact" },
+        { name: t.nav.about, href: anchor("about") },
+        { name: t.nav.services, href: anchor("services") },
+        { name: t.nav.faq, href: anchor("faq") },
+        { name: t.nav.contact, href: anchor("contact") },
     ]
 
     const updateButtonPosition = useCallback(() => {
@@ -48,25 +63,28 @@ export function Navbar() {
     }, [])
 
     useEffect(() => {
+        if (isPage) {
+            updateButtonPosition()
+            window.addEventListener("resize", updateButtonPosition, { passive: true })
+            return () => window.removeEventListener("resize", updateButtonPosition)
+        }
+
         const handleScroll = () => {
             const scrollY = window.scrollY
-            const heroHeight = window.innerHeight
+            const navBand = 80
 
             setIsScrolled(scrollY > SCROLL_THRESHOLD)
-            setIsInHero(scrollY < heroHeight - HERO_OFFSET)
+            setIsInHero(scrollY < window.innerHeight - HERO_OFFSET)
 
             const servicesSection = document.getElementById("services")
             if (servicesSection) {
-                const servicesTop = servicesSection.offsetTop
-                const servicesBottom = servicesTop + servicesSection.offsetHeight
-                const isInServicesRange = scrollY >= servicesTop - 200 && scrollY < servicesBottom - 200
-                setIsInServices(isInServicesRange)
+                const rect = servicesSection.getBoundingClientRect()
+                setIsInServices(rect.top <= navBand && rect.bottom > navBand)
             }
 
             const contactSection = document.getElementById("contact")
             if (contactSection) {
-                const rect = contactSection.getBoundingClientRect()
-                setIsInContact(rect.top <= CONTACT_OFFSET)
+                setIsInContact(contactSection.getBoundingClientRect().top <= CONTACT_OFFSET)
             }
         }
 
@@ -80,7 +98,7 @@ export function Navbar() {
             window.removeEventListener("scroll", handleScroll)
             window.removeEventListener("resize", updateButtonPosition)
         }
-    }, [updateButtonPosition])
+    }, [updateButtonPosition, isPage])
 
     useEffect(() => {
         document.body.style.overflow = isMobileMenuOpen ? "hidden" : ""
@@ -89,25 +107,74 @@ export function Navbar() {
         }
     }, [isMobileMenuOpen])
 
+    useEffect(() => {
+        const media = window.matchMedia("(min-width: 1024px)")
+        const closeOnDesktop = () => {
+            if (media.matches) setIsMobileMenuOpen(false)
+        }
+        closeOnDesktop()
+        media.addEventListener("change", closeOnDesktop)
+        return () => media.removeEventListener("change", closeOnDesktop)
+    }, [])
+
+    useEffect(() => {
+        const onKey = (event: KeyboardEvent) => {
+            if (event.key !== "Escape") return
+            setIsLangMenuOpen(false)
+            setIsMobileMenuOpen(false)
+        }
+        window.addEventListener("keydown", onKey)
+        return () => window.removeEventListener("keydown", onKey)
+    }, [])
+
     const handleMenuToggle = () => {
+        /* En touch, el navegador sintetiza un `click` ~300ms después del `touchend`. Como esto es
+           un toggle, ese evento fantasma reabría el menú a mitad de la animación de salida: se
+           cerraba y medio segundo después reaparecía. Ignoramos disparos muy seguidos. */
+        if (isMenuClosingRef.current) return
+        const now = Date.now()
+        const desde = now - lastToggleRef.current
+        if (desde < GHOST_CLICK_MS) return
+        lastToggleRef.current = now
+
+        if (isMobileMenuOpen) {
+            isMenuClosingRef.current = true
+            setIsMobileMenuOpen(false)
+            return
+        }
+
         updateButtonPosition()
-        setIsMobileMenuOpen(!isMobileMenuOpen)
+        setIsMobileMenuOpen(true)
     }
+
+    /* Cerrar también marca el guard: si no, el click fantasma que llega después de cerrar
+       con la X caía en el hamburguesa (que está encima) y lo reabría. */
+    const closeMenu = useCallback(() => {
+        lastToggleRef.current = Date.now()
+        isMenuClosingRef.current = true
+        setIsMobileMenuOpen(false)
+    }, [])
+
+    const handleMenuExitComplete = useCallback(() => {
+        isMenuClosingRef.current = false
+    }, [])
 
     const handleLanguageChange = (langCode: Language) => {
         setLanguage(langCode)
         setIsLangMenuOpen(false)
     }
 
-    const isDarkSection = (isInHero || isInContact) && !isInServices
-    const textColorClass = isDarkSection ? "text-white" : "text-foreground"
+    const isDarkSection = !isPage && (isInHero || isInContact || isInServices)
+    const textColorClass = isDarkSection ? "text-white" : "text-ink"
 
-    const navbarBgClass = isInContact
-        ? "bg-[#1a1a1a]"
+    const navbarBgClass = isPage
+        ? "bg-paper/85 backdrop-blur-sm"
+        : isInContact
+        ? "bg-ink"
         : isInServices
-            ? "bg-[#D9D9D9]"
+            ? "bg-sage"
             : isScrolled && !isInHero
-                ? "bg-white/60 backdrop-blur-2xl"
+                ? "bg-paper"
                 : "bg-transparent"
 
     const menuButtonBgClass = isMobileMenuOpen
@@ -124,14 +191,11 @@ export function Navbar() {
 
     return (
         <>
-            <motion.header
-                initial={{ y: -100 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${navbarBgClass}`}
+            <header
+                className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${navbarBgClass}`}
             >
-                <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-                    <Logo textColor={textColorClass} />
+                <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:px-8">
+                    <Logo textColor={textColorClass} href={isPage ? "/" : "#"} />
                     <DesktopNav
                         navLinks={navLinks}
                         textColor={textColorClass}
@@ -139,7 +203,8 @@ export function Navbar() {
                         setIsLangMenuOpen={setIsLangMenuOpen}
                         language={language}
                         onLanguageChange={handleLanguageChange}
-                        isInContact={isInContact}
+                        isInContact={isInContact || isInServices}
+                        languageLabel={t.nav.language}
                     />
                     <MobileMenuButton
                         ref={menuButtonRef}
@@ -147,13 +212,16 @@ export function Navbar() {
                         bgClass={menuButtonBgClass}
                         hamburgerClass={hamburgerColorClass}
                         isOpen={isMobileMenuOpen}
+                        openLabel={t.nav.openMenu}
+                        closeLabel={t.nav.closeMenu}
                     />
                 </nav>
-            </motion.header>
+            </header>
 
             <MobileMenu
                 isOpen={isMobileMenuOpen}
-                onClose={() => setIsMobileMenuOpen(false)}
+                onClose={closeMenu}
+                onExitComplete={handleMenuExitComplete}
                 buttonPosition={buttonPosition}
                 navLinks={navLinks}
                 socialLinks={socialLinks}
@@ -165,10 +233,10 @@ export function Navbar() {
     )
 }
 
-function Logo({ textColor }: { textColor: string }) {
+function Logo({ textColor, href = "#" }: { textColor: string; href?: string }) {
     return (
-        <a href="#" className={`transition-colors duration-300 ${textColor}`}>
-            <span className="text-lg lg:text-xl font-semibold">Eduardo Montenegro</span>
+        <a href={href} className={`transition-colors duration-300 ${textColor}`}>
+            <span className="text-[1.05rem] font-semibold sm:text-lg lg:text-xl">Eduardo Montenegro</span>
         </a>
     )
 }
@@ -181,6 +249,7 @@ interface DesktopNavProps {
     language: Language
     onLanguageChange: (lang: Language) => void
     isInContact: boolean
+    languageLabel: string
 }
 
 function DesktopNav({
@@ -190,10 +259,11 @@ function DesktopNav({
     setIsLangMenuOpen,
     language,
     onLanguageChange,
-    isInContact
+    isInContact,
+    languageLabel,
 }: DesktopNavProps) {
     return (
-        <div className="hidden items-center gap-8 md:flex">
+        <div className="hidden items-center gap-8 lg:flex">
             <ul className="flex items-center gap-8">
                 {navLinks.map((link) => (
                     <li key={link.name}>
@@ -213,6 +283,7 @@ function DesktopNav({
                 onLanguageChange={onLanguageChange}
                 textColor={textColor}
                 isInContact={isInContact}
+                languageLabel={languageLabel}
             />
         </div>
     )
@@ -225,6 +296,7 @@ interface LanguageSelectorProps {
     onLanguageChange: (lang: Language) => void
     textColor: string
     isInContact: boolean
+    languageLabel: string
 }
 
 function LanguageSelector({
@@ -233,13 +305,18 @@ function LanguageSelector({
     language,
     onLanguageChange,
     textColor,
-    isInContact
+    isInContact,
+    languageLabel,
 }: LanguageSelectorProps) {
     return (
         <div className="relative">
             <button
+                type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-1 text-base font-medium transition-colors duration-300 lg:text-lg ${textColor} hover:opacity-70`}
+                aria-expanded={isOpen}
+                aria-haspopup="listbox"
+                aria-label={languageLabel}
+                className={`flex min-h-11 items-center gap-1 text-base font-medium transition-colors duration-300 lg:text-lg ${textColor} hover:opacity-70`}
             >
                 {languages.find((l) => l.code === language)?.label}
                 <ChevronDown size={16} className={`transition-transform ${isOpen ? "rotate-180" : ""}`} />
@@ -247,19 +324,24 @@ function LanguageSelector({
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, y: -8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className={`absolute right-0 top-full mt-2 rounded-md py-2 backdrop-blur-md ${isInContact ? "bg-white/10" : "bg-white shadow-lg"
-                            }`}
+                        exit={{ opacity: 0, y: -8 }}
+                        transition={{ duration: 0.15 }}
+                        role="listbox"
+                        aria-label={languageLabel}
+                        className={`absolute right-0 top-full mt-2 min-w-28 py-1 ${isInContact ? "bg-ink" : "bg-paper"}`}
                     >
                         {languages.map((lang) => (
                             <button
                                 key={lang.code}
+                                type="button"
+                                role="option"
+                                aria-selected={language === lang.code}
                                 onClick={() => onLanguageChange(lang.code)}
-                                className={`block w-full px-4 py-2 text-left text-sm transition-colors ${isInContact
-                                    ? `hover:bg-white/10 ${language === lang.code ? "font-semibold text-white" : "text-neutral-300"}`
-                                    : `hover:bg-neutral-100 ${language === lang.code ? "font-semibold text-neutral-900" : "text-neutral-600"}`
+                                className={`block min-h-11 w-full px-4 py-2 text-left text-sm transition-colors ${isInContact
+                                    ? `hover:bg-white/10 ${language === lang.code ? "font-semibold text-white" : "text-white/80"}`
+                                    : `hover:bg-surface ${language === lang.code ? "font-semibold text-ink" : "text-sage-ink"}`
                                     }`}
                             >
                                 {lang.label}
@@ -277,16 +359,20 @@ interface MobileMenuButtonProps {
     bgClass: string
     hamburgerClass: string
     isOpen: boolean
+    openLabel: string
+    closeLabel: string
 }
 
 const MobileMenuButton = React.forwardRef<HTMLButtonElement, MobileMenuButtonProps>(
-    ({ onClick, bgClass, hamburgerClass, isOpen }, ref) => {
+    ({ onClick, bgClass, hamburgerClass, isOpen, openLabel, closeLabel }, ref) => {
         return (
             <button
                 ref={ref}
+                type="button"
                 onClick={onClick}
-                className={`relative z-[60] flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 md:hidden ${bgClass}`}
-                aria-label="Toggle menu"
+                aria-expanded={isOpen}
+                aria-label={isOpen ? closeLabel : openLabel}
+                className={`relative z-[60] flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 lg:hidden ${bgClass}`}
             >
                 <div className="flex flex-col items-center justify-center gap-1.5">
                     <motion.span
@@ -309,11 +395,10 @@ const MobileMenuButton = React.forwardRef<HTMLButtonElement, MobileMenuButtonPro
 
 MobileMenuButton.displayName = "MobileMenuButton"
 
-import React from "react"
-
 interface MobileMenuProps {
     isOpen: boolean
     onClose: () => void
+    onExitComplete: () => void
     buttonPosition: { x: number; y: number }
     navLinks: Array<{ name: string; href: string }>
     socialLinks: SocialLink[]
@@ -322,9 +407,14 @@ interface MobileMenuProps {
     t: any
 }
 
+function menuCircle(radius: string, origin: { x: number; y: number }) {
+    return `circle(${radius} at ${origin.x}px ${origin.y}px)`
+}
+
 function MobileMenu({
     isOpen,
     onClose,
+    onExitComplete,
     buttonPosition,
     navLinks,
     socialLinks,
@@ -332,20 +422,53 @@ function MobileMenu({
     onLanguageChange,
     t
 }: MobileMenuProps) {
+    const [isShown, setIsShown] = useState(false)
+    const [isExpanded, setIsExpanded] = useState(false)
+    const [isParked, setIsParked] = useState(false)
+    const originRef = useRef(buttonPosition)
+    const isClosingRef = useRef(false)
+
+    useEffect(() => {
+        if (isOpen) {
+            isClosingRef.current = false
+            originRef.current = buttonPosition
+            setIsParked(false)
+            setIsShown(true)
+            return
+        }
+        isClosingRef.current = true
+        setIsExpanded(false)
+    }, [isOpen, buttonPosition])
+
+    useEffect(() => {
+        if (!isShown || !isOpen) return
+        const frame = requestAnimationFrame(() => setIsExpanded(true))
+        return () => cancelAnimationFrame(frame)
+    }, [isShown, isOpen])
+
+    if (!isShown) return null
+
+    const origin = originRef.current
+    const clipPath = isExpanded ? menuCircle("150%", origin) : menuCircle("0%", origin)
+
     return (
-        <AnimatePresence>
-            {isOpen && (
                 <motion.div
-                    initial={{ clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
-                    animate={{ clipPath: `circle(150% at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
-                    exit={{ clipPath: `circle(0px at ${buttonPosition.x}px ${buttonPosition.y}px)` }}
+                    initial={false}
+                    animate={{ clipPath }}
                     transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                    className="fixed inset-0 z-[55] bg-neutral-900 md:hidden"
+                    onAnimationComplete={() => {
+                        if (!isClosingRef.current) return
+                        setIsParked(true)
+                        onExitComplete()
+                    }}
+                    aria-hidden={!isExpanded}
+                    className={`fixed inset-0 z-[55] overflow-hidden bg-ink lg:hidden ${isParked ? "invisible pointer-events-none" : ""}`}
                 >
                     <button
+                        type="button"
                         onClick={onClose}
                         className="absolute right-6 top-6 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white transition-transform hover:scale-110"
-                        aria-label="Close menu"
+                        aria-label={t.nav.closeMenu}
                     >
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className="text-neutral-900">
                             <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -365,7 +488,7 @@ function MobileMenu({
                                 <span className="text-xl font-normal">Eduardo Montenegro</span>
                             </motion.a>
 
-                            <ul className="flex flex-col gap-6 mb-8">
+                            <ul className="mb-8 flex flex-col gap-6">
                                 {navLinks.map((link, index) => (
                                     <motion.li
                                         key={link.name}
@@ -388,8 +511,8 @@ function MobileMenu({
                         <div className="flex flex-col gap-8">
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
                                 <h4 className="mb-4 text-sm font-medium uppercase tracking-wider text-neutral-500">{t.nav.contact}</h4>
-                                <a href="mailto:formacion@eduardomontenegro.com" className="mb-2 block text-sm text-white hover:text-neutral-400">
-                                    formacion@eduardomontenegro.com
+                                <a href="mailto:Contacto@eduardomontenegro.com" className="mb-2 block text-sm text-white hover:text-neutral-400">
+                                    Contacto@eduardomontenegro.com
                                 </a>
                                 <a href="tel:+573142793431" className="block text-sm text-white hover:text-neutral-400">
                                     +57 314 279 3431
@@ -440,7 +563,5 @@ function MobileMenu({
                         </div>
                     </div>
                 </motion.div>
-            )}
-        </AnimatePresence>
     )
 }

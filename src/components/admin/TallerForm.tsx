@@ -1,377 +1,269 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
-import type { Taller, TallerBlock, TallerImage } from "@/lib/talleres"
+import type { Taller, TallerBlock, TallerI18n } from "@/lib/talleres"
 import { titleToSlug } from "@/lib/talleres"
+import { galleryFromBlocks, isImageBlock, mergeGalleryIntoBlocks } from "@/lib/content-blocks"
+import { emptyLocalizedText, type LocalizedText } from "@/lib/i18n-field"
+import type { Language } from "@/lib/translations"
+import { ContentBlocksEditor } from "@/components/admin/ContentBlocksEditor"
+import { AiTranslateButton, useAiTranslate } from "@/components/admin/AiTranslateButton"
+import {
+  FallbackHint,
+  Field,
+  ImageField,
+  LocaleSwitcher,
+  Panel,
+  VisibilityToggle,
+  buttonClass,
+  inputClass,
+  missingLocales,
+  primaryButtonClass,
+} from "@/components/admin/admin-ui"
 
 interface TallerFormProps {
   initialData?: Partial<Taller>
   mode: "create" | "edit"
 }
 
+function patchLocalized(field: LocalizedText | undefined, en: string | undefined, fr: string | undefined): LocalizedText {
+  return { ...(field ?? emptyLocalizedText()), en: en ?? field?.en, fr: fr ?? field?.fr }
+}
+
 export function TallerForm({ initialData, mode }: TallerFormProps) {
   const router = useRouter()
-
+  const [locale, setLocale] = useState<Language>("es")
   const [title, setTitle] = useState(initialData?.title ?? "")
   const [date, setDate] = useState(initialData?.date ?? "")
   const [cost, setCost] = useState(initialData?.cost ?? "")
   const [excerpt, setExcerpt] = useState(initialData?.excerpt ?? "")
+  const [i18n, setI18n] = useState<TallerI18n>(initialData?.i18n ?? {})
   const [coverImage, setCoverImage] = useState(initialData?.coverImage ?? "")
-  const [blocks, setBlocks] = useState<TallerBlock[]>(initialData?.blocks ?? [])
-  const [images, setImages] = useState<TallerImage[]>(initialData?.images ?? [])
+  const [blocks, setBlocks] = useState<TallerBlock[]>(
+    mergeGalleryIntoBlocks(initialData?.blocks ?? [], initialData?.images ?? [])
+  )
+  const [published, setPublished] = useState(initialData?.published ?? true)
+  const [error, setError] = useState("")
+  const [saving, setSaving] = useState(false)
+  const { translate, translating, error: translateError, setError: setTranslateError } = useAiTranslate()
 
   const slug = titleToSlug(title)
+  const L = locale.toUpperCase()
 
-  const addBlock = (type: TallerBlock["type"]) => {
-    setBlocks([...blocks, { type, content: "" }])
-  }
+  const titleValue = locale === "es" ? title : (i18n.title?.[locale] ?? "")
+  const excerptValue = locale === "es" ? excerpt : (i18n.excerpt?.[locale] ?? "")
+  const costValue = locale === "es" ? cost : (i18n.cost?.[locale] ?? "")
 
-  const updateBlock = (index: number, field: Partial<TallerBlock>) => {
-    setBlocks(blocks.map((b, i) => (i === index ? { ...b, ...field } : b)))
-  }
-
-  const removeBlock = (index: number) => {
-    setBlocks(blocks.filter((_, i) => i !== index))
-  }
-
-  const moveBlock = (index: number, direction: -1 | 1) => {
-    const target = index + direction
-    if (target < 0 || target >= blocks.length) return
-    const copy = [...blocks]
-    ;[copy[index], copy[target]] = [copy[target], copy[index]]
-    setBlocks(copy)
-  }
-
-  const addImage = () => {
-    setImages([...images, { url: "", alt: "" }])
-  }
-
-  const updateImage = (index: number, field: Partial<TallerImage>) => {
-    setImages(images.map((img, i) => (i === index ? { ...img, ...field } : img)))
-  }
-
-  const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index))
-  }
-
-  const uploadRef = useRef<HTMLInputElement>(null)
-  const [uploading, setUploading] = useState(false)
-
-  const handleUpload = async (file: File): Promise<string | null> => {
-    setUploading(true)
-    try {
-      const formData = new FormData()
-      formData.append("file", file)
-      const res = await fetch("/api/admin/upload", { method: "POST", body: formData })
-      if (!res.ok) return null
-      const { url } = await res.json()
-      return url
-    } catch {
-      return null
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  const handleFilePick = async (e: React.ChangeEvent<HTMLInputElement>, onUrl: (url: string) => void) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const url = await handleUpload(file)
-    if (url) onUrl(url)
-    e.target.value = ""
+  const handleAiTranslate = async () => {
+    setTranslateError("")
+    const fields: Record<string, string> = {}
+    if (title.trim()) fields.title = title
+    if (excerpt.trim()) fields.excerpt = excerpt
+    if (cost.trim()) fields.cost = cost
+    blocks.forEach((block, index) => {
+      if (isImageBlock(block)) {
+        if (block.alt.es?.trim()) fields[`block-${index}-alt`] = block.alt.es
+        return
+      }
+      if (block.content.es?.trim()) fields[`block-${index}`] = block.content.es
+    })
+    const result = await translate(fields)
+    if (!result) return
+    const { en, fr } = result
+    setI18n({
+      title: patchLocalized(i18n.title, en.title, fr.title),
+      excerpt: patchLocalized(i18n.excerpt, en.excerpt, fr.excerpt),
+      cost: patchLocalized(i18n.cost, en.cost, fr.cost),
+    })
+    setBlocks((prev) =>
+      prev.map((block, index) => {
+        if (isImageBlock(block)) {
+          return { ...block, alt: patchLocalized(block.alt, en[`block-${index}-alt`], fr[`block-${index}-alt`]) }
+        }
+        return { ...block, content: patchLocalized(block.content, en[`block-${index}`], fr[`block-${index}`]) }
+      })
+    )
+    setLocale("en")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
+
+    if (!title.trim()) {
+      setError("El título en español es obligatorio.")
+      setLocale("es")
+      return
+    }
 
     const payload = {
       title,
       date,
       cost,
       excerpt,
+      i18n,
       coverImage: coverImage || undefined,
       blocks,
-      images: images.filter((img) => img.url),
+      images: galleryFromBlocks(blocks),
+      published,
     }
 
-    let res: Response
+    setSaving(true)
+    try {
+      const res =
+        mode === "create"
+          ? await fetch("/api/talleres", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
+          : await fetch(`/api/talleres/${initialData?.slug}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            })
 
-    if (mode === "create") {
-      res = await fetch("/api/talleres", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-    } else {
-      res = await fetch(`/api/talleres/${initialData?.slug}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-    }
+      if (res.ok) {
+        router.push("/admin/talleres")
+        router.refresh()
+        return
+      }
 
-    if (res.ok) {
-      router.push("/admin")
-      router.refresh()
+      const data = await res.json().catch(() => ({}))
+      setError(data.error ?? "No se pudo guardar el taller")
+    } catch {
+      setError("No se pudo conectar con el servidor")
+    } finally {
+      setSaving(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Información básica */}
-      <div className="border border-neutral-200 bg-white p-6">
-        <h3 className="mb-6 text-sm font-medium uppercase tracking-wider text-neutral-500">
-          Información básica
-        </h3>
+    <form onSubmit={handleSubmit} noValidate className="space-y-6 pb-24">
+      <LocaleSwitcher
+        locale={locale}
+        onChange={setLocale}
+        missing={missingLocales([
+          { es: title, en: i18n.title?.en, fr: i18n.title?.fr },
+          { es: excerpt, en: i18n.excerpt?.en, fr: i18n.excerpt?.fr },
+          ...blocks.flatMap((block) => (isImageBlock(block) ? [block.alt] : [block.content])),
+        ])}
+      />
 
-        <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
-            Título
-          </label>
+      {(error || translateError) && (
+        <p role="alert" className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error || translateError}
+        </p>
+      )}
+
+      <Panel title="Visibilidad">
+        <Field
+          label="Visibilidad"
+          hint={
+            published
+              ? "Se ve en la home y en su página."
+              : "Queda guardado pero oculto: solo tú lo ves con sesión iniciada."
+          }
+        >
+          <VisibilityToggle published={published} onChange={setPublished} />
+        </Field>
+      </Panel>
+
+      <Panel title="Información básica">
+        <Field
+          label={`Título (${L})`}
+          hint={
+            <>
+              {slug && <span className="font-mono">/talleres/{slug}</span>} <FallbackHint locale={locale} />
+            </>
+          }
+        >
           <input
             type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="w-full border border-neutral-200 bg-transparent px-3 py-2 text-neutral-900 focus:border-neutral-400 focus:outline-none"
+            value={titleValue}
+            onChange={(e) => {
+              const value = e.target.value
+              if (locale === "es") {
+                setTitle(value)
+                return
+              }
+              setI18n((prev) => ({ ...prev, title: { ...prev.title, [locale]: value } }))
+            }}
+            className={inputClass}
           />
-          {title && (
-            <p className="mt-1 font-mono text-xs text-neutral-400">{slug}</p>
-          )}
-        </div>
+        </Field>
 
-        <div className="mb-4 grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
-              Fecha
-            </label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              className="w-full border border-neutral-200 bg-transparent px-3 py-2 text-neutral-900 focus:border-neutral-400 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-neutral-700">
-              Costo
-            </label>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Fecha">
+            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
+          </Field>
+          <Field label={`Costo (${L})`}>
             <input
               type="text"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              required
+              value={costValue}
+              onChange={(e) => {
+                const value = e.target.value
+                if (locale === "es") {
+                  setCost(value)
+                  return
+                }
+                setI18n((prev) => ({ ...prev, cost: { ...prev.cost, [locale]: value } }))
+              }}
               placeholder="Ej: COP 120.000 o Gratuito"
-              className="w-full border border-neutral-200 bg-transparent px-3 py-2 text-neutral-900 focus:border-neutral-400 focus:outline-none"
+              className={inputClass}
             />
-          </div>
+          </Field>
         </div>
 
-        <div className="mb-4">
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
-            Extracto
-          </label>
+        <Field label={`Extracto (${L})`}>
           <textarea
-            value={excerpt}
-            onChange={(e) => setExcerpt(e.target.value)}
-            required
+            value={excerptValue}
+            onChange={(e) => {
+              const value = e.target.value
+              if (locale === "es") {
+                setExcerpt(value)
+                return
+              }
+              setI18n((prev) => ({ ...prev, excerpt: { ...prev.excerpt, [locale]: value } }))
+            }}
             rows={2}
-            className="w-full border border-neutral-200 bg-transparent px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none"
+            className={`${inputClass} text-sm`}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className="mb-1 block text-sm font-medium text-neutral-700">
-            Imagen de portada
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={coverImage}
-              onChange={(e) => setCoverImage(e.target.value)}
-              placeholder="https://... o sube un archivo"
-              className="flex-1 border border-neutral-200 bg-transparent px-3 py-2 text-neutral-900 focus:border-neutral-400 focus:outline-none"
-            />
-            <label
-              className={`flex cursor-pointer items-center border px-3 py-2 text-sm transition-colors duration-200 ${
-                uploading
-                  ? "cursor-wait border-neutral-200 text-neutral-400"
-                  : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-              }`}
-            >
-              <input
-                ref={uploadRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={uploading}
-                onChange={(e) => handleFilePick(e, setCoverImage)}
-              />
-              {uploading ? "Subiendo..." : "Subir"}
-            </label>
-          </div>
-        </div>
-      </div>
+        <ImageField
+          label="Imagen de portada"
+          value={coverImage}
+          onChange={setCoverImage}
+          prefix="talleres/covers"
+        />
+      </Panel>
 
-      {/* Contenido */}
-      <div className="border border-neutral-200 bg-white p-6">
-        <h3 className="mb-6 text-sm font-medium uppercase tracking-wider text-neutral-500">
-          Contenido
-        </h3>
+      <Panel
+        title={`Contenido de la página interna (${L})`}
+        description="Títulos, párrafos e imágenes en el orden en que se verán. Usa el menú de posición para reordenar."
+        actions={
+          <AiTranslateButton onClick={handleAiTranslate} busy={translating} disabled={!title.trim()} />
+        }
+      >
+        <p className="text-xs text-neutral-500">
+          Completa el español y pulsa “Autocompletar con IA” para rellenar inglés y francés.
+        </p>
+        <ContentBlocksEditor
+          blocks={blocks}
+          onChange={setBlocks}
+          locale={locale}
+          uploadPrefix="talleres/blocks"
+        />
+      </Panel>
 
-        <div className="space-y-4">
-          {blocks.map((block, index) => (
-            <div key={index} className="flex gap-2">
-              <div className="flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => moveBlock(index, -1)}
-                  disabled={index === 0}
-                  className="h-6 w-6 border border-neutral-200 text-xs text-neutral-400 transition-colors duration-200 hover:bg-neutral-100 disabled:opacity-30"
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => moveBlock(index, 1)}
-                  disabled={index === blocks.length - 1}
-                  className="h-6 w-6 border border-neutral-200 text-xs text-neutral-400 transition-colors duration-200 hover:bg-neutral-100 disabled:opacity-30"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeBlock(index)}
-                  className="h-6 w-6 border border-neutral-200 text-xs text-neutral-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-500"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex-1">
-                <select
-                  value={block.type}
-                  onChange={(e) =>
-                    updateBlock(index, { type: e.target.value as TallerBlock["type"] })
-                  }
-                  className="mb-2 w-full border border-neutral-200 bg-transparent px-3 py-1 text-sm text-neutral-700 focus:border-neutral-400 focus:outline-none"
-                >
-                  <option value="heading">Título</option>
-                  <option value="paragraph">Párrafo</option>
-                </select>
-                <textarea
-                  value={block.content}
-                  onChange={(e) => updateBlock(index, { content: e.target.value })}
-                  rows={block.type === "heading" ? 1 : 4}
-                  className={`w-full border border-neutral-200 bg-transparent px-3 py-2 text-neutral-900 focus:border-neutral-400 focus:outline-none ${
-                    block.type === "heading"
-                      ? "text-lg font-medium"
-                      : "text-sm leading-relaxed"
-                  }`}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={() => addBlock("paragraph")}
-            className="border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition-colors duration-200 hover:bg-neutral-100"
-          >
-            + Párrafo
-          </button>
-          <button
-            type="button"
-            onClick={() => addBlock("heading")}
-            className="border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition-colors duration-200 hover:bg-neutral-100"
-          >
-            + Título
-          </button>
-        </div>
-      </div>
-
-      {/* Imágenes adicionales */}
-      <div className="border border-neutral-200 bg-white p-6">
-        <h3 className="mb-6 text-sm font-medium uppercase tracking-wider text-neutral-500">
-          Imágenes adicionales
-        </h3>
-
-        <div className="space-y-4">
-          {images.map((img, index) => (
-            <div key={index} className="flex items-start gap-2">
-              <div className="flex-1 space-y-2">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={img.url}
-                    onChange={(e) => updateImage(index, { url: e.target.value })}
-                    placeholder="URL de la imagen"
-                    className="flex-1 border border-neutral-200 bg-transparent px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none"
-                  />
-                  <label
-                    className={`flex cursor-pointer items-center border px-2 py-2 text-xs transition-colors duration-200 ${
-                      uploading
-                        ? "cursor-wait border-neutral-200 text-neutral-400"
-                        : "border-neutral-300 text-neutral-700 hover:bg-neutral-100"
-                    }`}
-                  >
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploading}
-                      onChange={(e) =>
-                        handleFilePick(e, (url) => updateImage(index, { url }))
-                      }
-                    />
-                    {uploading ? "..." : "Subir"}
-                  </label>
-                </div>
-                <input
-                  type="text"
-                  value={img.alt ?? ""}
-                  onChange={(e) => updateImage(index, { alt: e.target.value })}
-                  placeholder="Texto alternativo"
-                  className="w-full border border-neutral-200 bg-transparent px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => removeImage(index)}
-                className="mt-2 h-6 w-6 border border-neutral-200 text-xs text-neutral-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-500"
-              >
-                ✕
-              </button>
-            </div>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={addImage}
-          className="mt-4 border border-neutral-300 px-4 py-2 text-sm text-neutral-700 transition-colors duration-200 hover:bg-neutral-100"
-        >
-          + Agregar imagen
-        </button>
-      </div>
-
-      {/* Footer */}
-      <div className="flex justify-end gap-4">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="border border-neutral-300 px-6 py-3 text-sm text-neutral-700 transition-colors duration-200 hover:bg-neutral-100"
-        >
+      <div className="sticky bottom-0 z-20 -mx-4 flex justify-end gap-3 border-t border-neutral-200 bg-paper/95 px-4 py-4 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10">
+        <button type="button" onClick={() => router.back()} className={buttonClass}>
           Cancelar
         </button>
-        <button
-          type="submit"
-          className="bg-[#1a1a1a] px-6 py-3 text-sm text-white transition-colors duration-200 hover:bg-neutral-800"
-        >
-          {mode === "create" ? "Crear taller" : "Guardar cambios"}
+        <button type="submit" disabled={saving} className={primaryButtonClass}>
+          {saving ? "Guardando..." : mode === "create" ? "Crear taller" : "Guardar cambios"}
         </button>
       </div>
     </form>

@@ -3,15 +3,19 @@ import { Resend } from 'resend'
 import { render } from '@react-email/render'
 import ContactNotificationEmail from '@/emails/contact-notification'
 import { createContactFormSchema, formatZodErrors } from '@/lib/validation'
-import type { Language } from '@/lib/translations'
+import { parseLanguage } from '@/lib/language'
+import { readJsonObject } from '@/lib/http'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json()
+        const body = await readJsonObject(request)
+        if (!body) {
+            return NextResponse.json({ error: 'El cuerpo de la petición no es un JSON válido' }, { status: 400 })
+        }
 
-        const contactFormSchema = createContactFormSchema((body.language as Language) || 'es')
+        const contactFormSchema = createContactFormSchema(parseLanguage(body.language as string))
         const result = contactFormSchema.safeParse(body)
 
         if (!result.success) {
@@ -42,12 +46,14 @@ export async function POST(request: NextRequest) {
                 contactId: Date.now().toString(),
             }))
 
-            await resend.emails.send({
+            // Resend no lanza excepción cuando falla: devuelve `{ error }`.
+            const { error: sendError } = await resend.emails.send({
                 from: process.env.RESEND_FROM_EMAIL!,
                 to: process.env.RESEND_TO_EMAIL!,
                 subject: `Nueva consulta de ${name}`,
                 html: emailHtml,
             })
+            if (sendError) throw new Error(sendError.message)
         } catch (emailError) {
             console.error('Error enviando email:', emailError)
             return NextResponse.json(
