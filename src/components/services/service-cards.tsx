@@ -194,10 +194,10 @@ function PinCard({ href, title, subtitle, coverImage, badge, ctaLabel }: CardDat
                         <div className="h-full w-full bg-gradient-to-br from-sage to-sage-deep" />
                     )}
                 </div>
-                <h3 className="mt-5 line-clamp-2 font-serif text-[1.45rem] font-light italic leading-[1.15] text-white lg:text-[1.65rem]">
+                <h3 className="mt-5 line-clamp-1 font-serif text-[1.45rem] font-light italic leading-[1.15] text-white lg:text-[1.65rem]">
                     {title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/80">{subtitle}</p>
+                <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-white/80">{subtitle}</p>
                 <span className="mt-4 inline-flex w-fit items-center gap-1 text-sm text-white/70">
                     {ctaLabel} <span aria-hidden>→</span>
                 </span>

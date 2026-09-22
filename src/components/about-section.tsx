@@ -34,7 +34,9 @@ export function AboutSection({ content }: { content: AboutContent }) {
     return (
         <section id="about" className="relative scroll-mt-20 bg-paper">
             <div className="lg:grid lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
-                <aside className="sticky top-20 z-10 flex flex-col justify-center border-b border-sage/30 bg-paper px-6 py-8 sm:px-10 sm:py-10 lg:top-0 lg:h-svh lg:border-b-0 lg:border-r lg:px-16 lg:py-16 xl:px-24">
+                {/* `top-19` (76px) se mete 4px bajo el navbar opaco (80px en móvil): pegado al borde exacto,
+                    con zoom o densidades fraccionarias quedaba una rendija por la que asomaba el texto. */}
+                <aside className="sticky top-19 z-10 flex flex-col justify-center border-b border-sage/30 bg-paper px-6 pt-7 pb-8 sm:px-10 sm:pt-8 sm:pb-10 lg:top-0 lg:h-svh lg:border-b-0 lg:border-r lg:px-16 lg:py-16 xl:px-24">
                     <SectionHeading className="max-w-[8ch]">{pickLocale(content.title, language)}</SectionHeading>
                 </aside>
 
