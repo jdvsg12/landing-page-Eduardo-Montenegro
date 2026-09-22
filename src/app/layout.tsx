@@ -92,7 +92,12 @@ export default async function RootLayout({
     const htmlLang = languageToHtmlLang(language)
 
     return (
-        <html lang={htmlLang} className={`${geistSans.variable} ${geistMono.variable} scroll-smooth`}>
+        <html
+            lang={htmlLang}
+            className={`${geistSans.variable} ${geistMono.variable} scroll-smooth`}
+            // Next desactiva el smooth scroll al cambiar de ruta: la interna abre arriba sin animación.
+            data-scroll-behavior="smooth"
+        >
             <body className="font-sans antialiased">
                 <LanguageProvider initialLanguage={language}>
                     <SkipToContent />
