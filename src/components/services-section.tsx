@@ -18,8 +18,10 @@ export function ServicesSection({
     const { language } = useLanguage()
     const t = getTranslation(language)
 
+    // Sin `scroll-mt-20`: cada grupo ya reserva el navbar con su `pt-19`; sumar los dos
+    // dejaba ~80px de más sobre el título al llegar por el ancla #services.
     return (
-        <section id="services" className="relative scroll-mt-20 bg-sage">
+        <section id="services" className="relative bg-sage">
             <ServiceCards
                 services={services}
                 talleres={talleres}

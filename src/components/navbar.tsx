@@ -39,6 +39,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
     const { language, setLanguage } = useLanguage()
     const t = getTranslation(language)
     const menuButtonRef = useRef<HTMLButtonElement>(null)
+    const headerRef = useRef<HTMLElement>(null)
     const lastToggleRef = useRef(0)
     const isMenuClosingRef = useRef(false)
     const [buttonPosition, setButtonPosition] = useState({ x: 0, y: 0 })
@@ -71,7 +72,9 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
 
         const handleScroll = () => {
             const scrollY = window.scrollY
-            const navBand = 80
+            // Alto real del navbar (80px con hamburguesa, 76px desde `lg`): con un valor fijo de 80
+            // el fondo cambiaba a sage 4px antes y asomaba una línea de la sección anterior.
+            const navBand = headerRef.current?.offsetHeight ?? 80
 
             setIsScrolled(scrollY > SCROLL_THRESHOLD)
             setIsInHero(scrollY < window.innerHeight - HERO_OFFSET)
@@ -192,6 +195,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
     return (
         <>
             <header
+                ref={headerRef}
                 className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${navbarBgClass}`}
             >
                 <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 lg:px-8">
@@ -452,11 +456,13 @@ function MobileMenu({
     const clipPath = isExpanded ? menuCircle("150%", origin) : menuCircle("0%", origin)
 
     return (
-                <motion.div
-                    initial={false}
-                    animate={{ clipPath }}
-                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                    onAnimationComplete={() => {
+                /* Transición CSS, no framer: framer anima el clip-path fuera del estilo en línea y al
+                   terminar pintaba un cuadro con el valor viejo (al abrir el panel desaparecía un
+                   instante; al cerrar reaparecía completo). */
+                <div
+                    style={{ clipPath, transition: "clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
+                    onTransitionEnd={(event) => {
+                        if (event.target !== event.currentTarget || event.propertyName !== "clip-path") return
                         if (!isClosingRef.current) return
                         setIsParked(true)
                         onExitComplete()
@@ -562,6 +568,6 @@ function MobileMenu({
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
     )
 }
