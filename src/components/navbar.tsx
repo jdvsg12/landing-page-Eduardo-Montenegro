@@ -456,11 +456,13 @@ function MobileMenu({
     const clipPath = isExpanded ? menuCircle("150%", origin) : menuCircle("0%", origin)
 
     return (
-                <motion.div
-                    initial={false}
-                    animate={{ clipPath }}
-                    transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-                    onAnimationComplete={() => {
+                /* Transición CSS, no framer: framer anima el clip-path fuera del estilo en línea y al
+                   terminar pintaba un cuadro con el valor viejo (al abrir el panel desaparecía un
+                   instante; al cerrar reaparecía completo). */
+                <div
+                    style={{ clipPath, transition: "clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
+                    onTransitionEnd={(event) => {
+                        if (event.target !== event.currentTarget || event.propertyName !== "clip-path") return
                         if (!isClosingRef.current) return
                         setIsParked(true)
                         onExitComplete()
@@ -566,6 +568,6 @@ function MobileMenu({
                             </div>
                         </div>
                     </div>
-                </motion.div>
+                </div>
     )
 }
