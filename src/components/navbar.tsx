@@ -124,6 +124,7 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
         const onKey = (event: KeyboardEvent) => {
             if (event.key !== "Escape") return
             setIsLangMenuOpen(false)
+            if (document.activeElement?.closest("#mobile-menu")) menuButtonRef.current?.focus()
             setIsMobileMenuOpen(false)
         }
         window.addEventListener("keydown", onKey)
@@ -155,6 +156,8 @@ export function Navbar({ variant = "home" }: NavbarProps = {}) {
     const closeMenu = useCallback(() => {
         lastToggleRef.current = Date.now()
         isMenuClosingRef.current = true
+        // El foco vuelve al hamburguesa: si se queda en la X, el panel pasa a `inert` con el foco adentro.
+        menuButtonRef.current?.focus()
         setIsMobileMenuOpen(false)
     }, [])
 
@@ -431,6 +434,7 @@ function MobileMenu({
     const [isParked, setIsParked] = useState(false)
     const originRef = useRef(buttonPosition)
     const isClosingRef = useRef(false)
+    const panelRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if (isOpen) {
@@ -446,7 +450,12 @@ function MobileMenu({
 
     useEffect(() => {
         if (!isShown || !isOpen) return
-        const frame = requestAnimationFrame(() => setIsExpanded(true))
+        const frame = requestAnimationFrame(() => {
+            /* La primera vez el panel se monta en este mismo cuadro: sin forzar el cálculo de estilo,
+               el navegador nunca ve el círculo en 0%, no hay transición y el menú aparece de golpe. */
+            panelRef.current?.getBoundingClientRect()
+            setIsExpanded(true)
+        })
         return () => cancelAnimationFrame(frame)
     }, [isShown, isOpen])
 
@@ -460,6 +469,8 @@ function MobileMenu({
                    terminar pintaba un cuadro con el valor viejo (al abrir el panel desaparecía un
                    instante; al cerrar reaparecía completo). */
                 <div
+                    ref={panelRef}
+                    id="mobile-menu"
                     style={{ clipPath, transition: "clip-path 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
                     onTransitionEnd={(event) => {
                         if (event.target !== event.currentTarget || event.propertyName !== "clip-path") return
@@ -467,7 +478,7 @@ function MobileMenu({
                         setIsParked(true)
                         onExitComplete()
                     }}
-                    aria-hidden={!isExpanded}
+                    inert={!isOpen}
                     className={`fixed inset-0 z-[55] overflow-hidden bg-ink lg:hidden ${isParked ? "invisible pointer-events-none" : ""}`}
                 >
                     <button
